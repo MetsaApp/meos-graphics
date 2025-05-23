@@ -49,7 +49,26 @@ meos-graphics/
 The MeOS server configuration is set in `internal/meos/config.go`:
 - Default host: `192.168.112.1` (WSL host IP)
 - Default port: `2009`
-- Poll interval: `1 second`
+- Default poll interval: `1 second`
+
+### Poll Interval Configuration
+
+The `--poll-interval` flag allows you to customize how frequently the server fetches updates from MeOS:
+
+```bash
+# Examples of valid formats:
+--poll-interval 200ms    # 200 milliseconds
+--poll-interval 9s       # 9 seconds
+--poll-interval 2m       # 2 minutes
+--poll-interval 1m30s    # 1 minute and 30 seconds
+```
+
+Constraints:
+- Minimum: 100ms
+- Maximum: 1 hour
+- Default: 1s
+
+Lower intervals provide more responsive updates but increase network traffic and server load.
 
 ## Running
 
@@ -64,6 +83,9 @@ docker run -p 8090:8090 ghcr.io/metsaapp/meos-graphics:latest
 # Run in simulation mode
 docker run -p 8090:8090 ghcr.io/metsaapp/meos-graphics:latest --simulation
 
+# With custom poll interval (default: 1s)
+docker run -p 8090:8090 ghcr.io/metsaapp/meos-graphics:latest --poll-interval 500ms
+
 # With persistent logs
 docker run -p 8090:8090 -v $(pwd)/logs:/app/logs ghcr.io/metsaapp/meos-graphics:latest
 ```
@@ -75,6 +97,9 @@ go run ./cmd/meos-graphics
 
 # Simulation mode
 go run ./cmd/meos-graphics --simulation
+
+# Custom poll interval
+go run ./cmd/meos-graphics --poll-interval 200ms
 
 # Show version
 go run ./cmd/meos-graphics --version
