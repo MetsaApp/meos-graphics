@@ -415,67 +415,70 @@ func (a *Adapter) convertCompetitorList(cmps []MOPCompetitor) []models.Competito
 		}
 
 		startTimeDeciseconds := cmp.StartTime()
-		eventStart := a.state.GetEvent().Start
+		
+		event := a.state.GetEvent()
+		if event != nil && startTimeDeciseconds > 0 {
+			eventStart := event.Start
+			compStartSeconds := eventStart.Hour()*3600 + eventStart.Minute()*60 + eventStart.Second()
+			compStartDeciseconds := compStartSeconds * 10
 
-		compStartSeconds := eventStart.Hour()*3600 + eventStart.Minute()*60 + eventStart.Second()
-		compStartDeciseconds := compStartSeconds * 10
+			if startTimeDeciseconds != compStartDeciseconds {
+				seconds := startTimeDeciseconds / 10
+				hours := (seconds / 3600) % 24
+				minutes := (seconds % 3600) / 60
+				secs := seconds % 60
 
-		if startTimeDeciseconds != compStartDeciseconds && startTimeDeciseconds > 0 {
-			seconds := startTimeDeciseconds / 10
-			hours := (seconds / 3600) % 24
-			minutes := (seconds % 3600) / 60
-			secs := seconds % 60
+				nanos := (startTimeDeciseconds % 10) * 100000000
 
-			nanos := (startTimeDeciseconds % 10) * 100000000
+				startTime := time.Date(
+					eventStart.Year(),
+					eventStart.Month(),
+					eventStart.Day(),
+					hours,
+					minutes,
+					secs,
+					nanos,
+					eventStart.Location(),
+				)
 
-			startTime := time.Date(
-				eventStart.Year(),
-				eventStart.Month(),
-				eventStart.Day(),
-				hours,
-				minutes,
-				secs,
-				nanos,
-				eventStart.Location(),
-			)
+				competitor.StartTime = startTime
 
-			competitor.StartTime = startTime
-
-			runningTimeDeciseconds := cmp.RunningTime()
-			if runningTimeDeciseconds > 0 {
-				runningDuration := decisecondsToTimes(runningTimeDeciseconds)
-				finishTime := startTime.Add(runningDuration)
-				competitor.FinishTime = &finishTime
-			}
-
-			if cmp.Radio != "" {
-				splitPairs := strings.Split(cmp.Radio, ";")
-				for _, pair := range splitPairs {
-					parts := strings.Split(pair, ",")
-					if len(parts) != 2 {
-						continue
-					}
-
-					controlID := parseInt(parts[0])
-					splitTimeDeciseconds := parseInt(parts[1])
-
-					// Create control with just ID for now
-					control := models.Control{ID: controlID}
-
-					splitDuration := decisecondsToTimes(splitTimeDeciseconds)
-					passingTime := startTime.Add(splitDuration)
-
-					split := models.Split{
-						Control:     control,
-						PassingTime: passingTime,
-					}
-
-					competitor.Splits = append(competitor.Splits, split)
+				runningTimeDeciseconds := cmp.RunningTime()
+				if runningTimeDeciseconds > 0 {
+					runningDuration := decisecondsToTimes(runningTimeDeciseconds)
+					finishTime := startTime.Add(runningDuration)
+					competitor.FinishTime = &finishTime
 				}
 
-				sort.Slice(competitor.Splits, func(i, j int) bool {
-					return competitor.Splits[i].PassingTime.Before(competitor.Splits[j].PassingTime)
-				})
+				if cmp.Radio != "" {
+					splitPairs := strings.Split(cmp.Radio, ";")
+					for _, pair := range splitPairs {
+						parts := strings.Split(pair, ",")
+						if len(parts) != 2 {
+							continue
+						}
+
+						controlID := parseInt(parts[0])
+						splitTimeDeciseconds := parseInt(parts[1])
+
+						// Create control with just ID for now
+						control := models.Control{ID: controlID}
+
+						splitDuration := decisecondsToTimes(splitTimeDeciseconds)
+						passingTime := startTime.Add(splitDuration)
+
+						split := models.Split{
+							Control:     control,
+							PassingTime: passingTime,
+						}
+
+						competitor.Splits = append(competitor.Splits, split)
+					}
+
+					sort.Slice(competitor.Splits, func(i, j int) bool {
+						return competitor.Splits[i].PassingTime.Before(competitor.Splits[j].PassingTime)
+					})
+				}
 			}
 		}
 

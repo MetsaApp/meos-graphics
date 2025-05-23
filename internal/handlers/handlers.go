@@ -316,22 +316,24 @@ func (h *Handler) GetSplits(c *gin.Context) {
 			position++
 		}
 
-		// Add competitors without this split
-		for _, comp := range competitors {
-			if comp.Status == "3" { // DNF
-				found := false
-				for _, entry := range splitEntries {
-					if entry.competitor.ID == comp.ID {
-						found = true
-						break
+		// Add competitors without this split (but not for finish)
+		if control.ID != -1 {
+			for _, comp := range competitors {
+				if comp.Status == "3" { // DNF
+					found := false
+					for _, entry := range splitEntries {
+						if entry.competitor.ID == comp.ID {
+							found = true
+							break
+						}
 					}
-				}
-				if !found {
-					standing.Standings = append(standing.Standings, SplitTime{
-						Name:   comp.Name,
-						Club:   comp.Club.Name,
-						Status: "DNF",
-					})
+					if !found {
+						standing.Standings = append(standing.Standings, SplitTime{
+							Name:   comp.Name,
+							Club:   comp.Club.Name,
+							Status: "DNF",
+						})
+					}
 				}
 			}
 		}
@@ -343,11 +345,13 @@ func (h *Handler) GetSplits(c *gin.Context) {
 }
 
 func formatDuration(d time.Duration) string {
-	totalSeconds := d.Seconds()
-	hours := int(totalSeconds) / 3600
-	minutes := (int(totalSeconds) % 3600) / 60
-	seconds := int(totalSeconds) % 60
-	deciseconds := int((totalSeconds - float64(int(totalSeconds))) * 10)
+	// Convert to deciseconds to avoid floating point precision issues
+	totalDeciseconds := d.Milliseconds() / 100
+	
+	hours := totalDeciseconds / 36000
+	minutes := (totalDeciseconds % 36000) / 600
+	seconds := (totalDeciseconds % 600) / 10
+	deciseconds := totalDeciseconds % 10
 
 	if hours > 0 {
 		return fmt.Sprintf("%d:%02d:%02d.%d", hours, minutes, seconds, deciseconds)
