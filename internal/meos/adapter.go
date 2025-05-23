@@ -104,7 +104,12 @@ func (a *Adapter) fetchAndProcessData(difference string) (bool, error) {
 		protocol = "https"
 	}
 
-	baseURL := fmt.Sprintf("%s://%s:%d/meos", protocol, a.config.Hostname, a.config.Port)
+	var baseURL string
+	if a.config.PortStr == "none" {
+		baseURL = fmt.Sprintf("%s://%s/meos", protocol, a.config.Hostname)
+	} else {
+		baseURL = fmt.Sprintf("%s://%s:%d/meos", protocol, a.config.Hostname, a.config.Port)
+	}
 
 	values := url.Values{}
 	values.Add("difference", difference)
