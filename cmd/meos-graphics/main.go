@@ -56,7 +56,7 @@ func main() {
 		// Configure MeOS adapter
 		config := meos.NewConfig()
 		logger.InfoLogger.Printf("MeOS Configuration: %s:%d, Poll Interval: %s", config.Hostname, config.Port, config.PollInterval)
-		
+
 		if err := config.Validate(); err != nil {
 			logger.ErrorLogger.Printf("Invalid configuration: %v", err)
 			os.Exit(1)
@@ -64,7 +64,7 @@ func main() {
 
 		adapter = meos.NewAdapter(config, appState)
 	}
-	
+
 	// Connect adapter
 	if err := adapter.Connect(); err != nil {
 		logger.ErrorLogger.Printf("Failed to connect: %v", err)
@@ -73,7 +73,7 @@ func main() {
 		}
 	} else {
 		logger.InfoLogger.Println("Connected successfully")
-		
+
 		if err := adapter.StartPolling(); err != nil {
 			logger.ErrorLogger.Printf("Failed to start polling: %v", err)
 			logger.ErrorLogger.Println("Continuing without polling")
@@ -94,7 +94,7 @@ func main() {
 	// Health check endpoint
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{
-			"status": "ok",
+			"status":         "ok",
 			"meos_connected": true,
 		})
 	})
@@ -108,7 +108,7 @@ func main() {
 	// Handle graceful shutdown
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
-	
+
 	go func() {
 		logger.InfoLogger.Println("Graphics API server starting on :8090...")
 		if err := router.Run(":8090"); err != nil {
@@ -119,10 +119,10 @@ func main() {
 
 	<-sigChan
 	logger.InfoLogger.Println("Shutting down...")
-	
+
 	if err := adapter.Stop(); err != nil {
 		logger.ErrorLogger.Printf("Error stopping adapter: %v", err)
 	}
-	
+
 	logger.InfoLogger.Println("Shutdown complete")
 }

@@ -27,11 +27,11 @@ func NewAdapter(appState *state.State) *Adapter {
 
 func (a *Adapter) Connect() error {
 	logger.InfoLogger.Println("Starting simulation mode")
-	
+
 	// Generate initial data
 	baseTime := time.Now()
 	event, controls, classes, clubs, competitors := a.generator.GenerateInitialData(baseTime)
-	
+
 	// Update state
 	a.state.Lock()
 	a.state.Event = &event
@@ -40,14 +40,14 @@ func (a *Adapter) Connect() error {
 	a.state.Clubs = clubs
 	a.state.Competitors = competitors
 	a.state.Unlock()
-	
+
 	a.mu.Lock()
 	a.connected = true
 	a.mu.Unlock()
-	
-	logger.InfoLogger.Printf("Simulation initialized with %d classes and %d competitors", 
+
+	logger.InfoLogger.Printf("Simulation initialized with %d classes and %d competitors",
 		len(classes), len(competitors))
-	
+
 	return nil
 }
 
@@ -61,7 +61,7 @@ func (a *Adapter) StartPolling() error {
 
 	// Update every 100ms for smooth simulation
 	a.ticker = time.NewTicker(100 * time.Millisecond)
-	
+
 	go func() {
 		for {
 			select {
@@ -93,18 +93,18 @@ func (a *Adapter) Stop() error {
 
 func (a *Adapter) updateSimulation() {
 	currentTime := time.Now()
-	
+
 	// Get updated competitors
 	competitors := a.generator.UpdateSimulation(currentTime)
-	
+
 	// Update state
 	a.state.Lock()
 	a.state.Competitors = competitors
 	a.state.Unlock()
-	
+
 	// Log phase changes
 	elapsed := currentTime.Sub(a.generator.startTime)
-	
+
 	if elapsed.Truncate(time.Minute) == elapsed {
 		phase := "start list"
 		if elapsed >= 3*time.Minute && elapsed < 10*time.Minute {
@@ -112,10 +112,10 @@ func (a *Adapter) updateSimulation() {
 		} else if elapsed >= 10*time.Minute && elapsed < 15*time.Minute {
 			phase = "results"
 		}
-		
+
 		logger.DebugLogger.Printf("Simulation at %v - phase: %s", elapsed.Round(time.Second), phase)
 	}
-	
+
 	// Check for reset
 	if elapsed >= 15*time.Minute {
 		logger.InfoLogger.Println("Simulation cycle complete, restarting...")

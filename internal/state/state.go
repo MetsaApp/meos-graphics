@@ -79,7 +79,7 @@ func (s *State) GetCompetitors() []models.Competitor {
 func (s *State) GetCompetitorsByClass(classID int) []models.Competitor {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	
+
 	var result []models.Competitor
 	for _, comp := range s.Competitors {
 		if comp.Class.ID == classID {
@@ -92,7 +92,7 @@ func (s *State) GetCompetitorsByClass(classID int) []models.Competitor {
 func (s *State) GetCompetitor(id int) *models.Competitor {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	
+
 	for _, comp := range s.Competitors {
 		if comp.ID == id {
 			return &comp

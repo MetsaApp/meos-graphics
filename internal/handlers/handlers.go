@@ -24,7 +24,7 @@ func New(appState *state.State) *Handler {
 
 func (h *Handler) GetClasses(c *gin.Context) {
 	classes := h.state.GetClasses()
-	
+
 	var classInfos []ClassInfo
 	for _, class := range classes {
 		classInfos = append(classInfos, ClassInfo{
@@ -33,12 +33,12 @@ func (h *Handler) GetClasses(c *gin.Context) {
 			OrderKey: class.OrderKey,
 		})
 	}
-	
+
 	// Sort by OrderKey
 	sort.Slice(classInfos, func(i, j int) bool {
 		return classInfos[i].OrderKey < classInfos[j].OrderKey
 	})
-	
+
 	c.JSON(http.StatusOK, classInfos)
 }
 
@@ -48,14 +48,14 @@ func (h *Handler) GetStartList(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid class ID"})
 		return
 	}
-	
+
 	competitors := h.state.GetCompetitorsByClass(classID)
-	
+
 	// Sort by start time first
 	sort.Slice(competitors, func(i, j int) bool {
 		return competitors[i].StartTime.Before(competitors[j].StartTime)
 	})
-	
+
 	var startList []StartListEntry
 	for i, comp := range competitors {
 		startList = append(startList, StartListEntry{
@@ -66,7 +66,7 @@ func (h *Handler) GetStartList(c *gin.Context) {
 			Card:        comp.Card,
 		})
 	}
-	
+
 	c.JSON(http.StatusOK, startList)
 }
 
@@ -76,14 +76,14 @@ func (h *Handler) GetResults(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid class ID"})
 		return
 	}
-	
+
 	competitors := h.state.GetCompetitorsByClass(classID)
-	
+
 	var results []ResultEntry
 	var finishedCompetitors []models.Competitor
 	var dnfCompetitors []models.Competitor
 	var dnsCompetitors []models.Competitor
-	
+
 	// Categorize competitors
 	for _, comp := range competitors {
 		switch comp.Status {
@@ -99,7 +99,7 @@ func (h *Handler) GetResults(c *gin.Context) {
 			// Running or other status - skip
 		}
 	}
-	
+
 	// Sort finished competitors by time
 	sort.Slice(finishedCompetitors, func(i, j int) bool {
 		if finishedCompetitors[i].FinishTime == nil || finishedCompetitors[j].FinishTime == nil {
@@ -109,11 +109,11 @@ func (h *Handler) GetResults(c *gin.Context) {
 		timeJ := finishedCompetitors[j].FinishTime.Sub(finishedCompetitors[j].StartTime)
 		return timeI < timeJ
 	})
-	
+
 	// Build results with positions
 	position := 1
 	var winnerTime time.Duration
-	
+
 	// Get class radio controls
 	var radioControls []models.Control
 	classes := h.state.GetClasses()
@@ -123,11 +123,11 @@ func (h *Handler) GetResults(c *gin.Context) {
 			break
 		}
 	}
-	
+
 	for i, comp := range finishedCompetitors {
 		runTime := comp.FinishTime.Sub(comp.StartTime)
 		timeStr := formatDuration(runTime)
-		
+
 		var timeBehind *string
 		if i == 0 {
 			winnerTime = runTime
@@ -136,11 +136,11 @@ func (h *Handler) GetResults(c *gin.Context) {
 			behindStr := "+" + formatDuration(behind)
 			timeBehind = &behindStr
 		}
-		
+
 		// Build radio times
 		var radioTimes []RadioTime
 		var prevTime time.Duration
-		
+
 		for _, rc := range radioControls {
 			for _, split := range comp.Splits {
 				if split.Control.ID == rc.ID {
@@ -156,7 +156,7 @@ func (h *Handler) GetResults(c *gin.Context) {
 				}
 			}
 		}
-		
+
 		results = append(results, ResultEntry{
 			Position:   position,
 			Name:       comp.Name,
@@ -170,7 +170,7 @@ func (h *Handler) GetResults(c *gin.Context) {
 		})
 		position++
 	}
-	
+
 	// Add DNF competitors
 	for _, comp := range dnfCompetitors {
 		status := "DNF"
@@ -184,7 +184,7 @@ func (h *Handler) GetResults(c *gin.Context) {
 			Status:    status,
 		})
 	}
-	
+
 	// Add DNS competitors
 	for _, comp := range dnsCompetitors {
 		results = append(results, ResultEntry{
@@ -194,7 +194,7 @@ func (h *Handler) GetResults(c *gin.Context) {
 			Status:    "DNS",
 		})
 	}
-	
+
 	c.JSON(http.StatusOK, results)
 }
 
@@ -204,7 +204,7 @@ func (h *Handler) GetSplits(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid class ID"})
 		return
 	}
-	
+
 	// Get class info
 	var className string
 	var radioControls []models.Control
@@ -216,44 +216,44 @@ func (h *Handler) GetSplits(c *gin.Context) {
 			break
 		}
 	}
-	
+
 	if className == "" {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Class not found"})
 		return
 	}
-	
+
 	competitors := h.state.GetCompetitorsByClass(classID)
-	
+
 	response := SplitsResponse{
 		ClassName: className,
 		Splits:    []SplitStanding{},
 	}
-	
+
 	// Process each control (including finish)
 	allControls := append(radioControls, models.Control{ID: -1, Name: "Finish"})
-	
+
 	for _, control := range allControls {
 		standing := SplitStanding{
 			ControlID:   control.ID,
 			ControlName: control.Name,
 			Standings:   []SplitTime{},
 		}
-		
+
 		var splitEntries []struct {
 			competitor models.Competitor
 			splitTime  *time.Time
 			elapsed    time.Duration
 		}
-		
+
 		// Collect split times for this control
 		for _, comp := range competitors {
 			if comp.Status == "0" {
 				continue // Skip DNS
 			}
-			
+
 			var splitTime *time.Time
 			var elapsed time.Duration
-			
+
 			if control.ID == -1 { // Finish
 				if comp.FinishTime != nil {
 					splitTime = comp.FinishTime
@@ -280,19 +280,19 @@ func (h *Handler) GetSplits(c *gin.Context) {
 				}
 			}
 		}
-		
+
 		// Sort by elapsed time
 		sort.Slice(splitEntries, func(i, j int) bool {
 			return splitEntries[i].elapsed < splitEntries[j].elapsed
 		})
-		
+
 		// Build standings with positions
 		position := 1
 		var leaderTime time.Duration
-		
+
 		for i, entry := range splitEntries {
 			elapsedStr := formatDuration(entry.elapsed)
-			
+
 			var timeBehind *string
 			if i == 0 {
 				leaderTime = entry.elapsed
@@ -301,7 +301,7 @@ func (h *Handler) GetSplits(c *gin.Context) {
 				behindStr := "+" + formatDuration(behind)
 				timeBehind = &behindStr
 			}
-			
+
 			standing.Standings = append(standing.Standings, SplitTime{
 				Position:    position,
 				Name:        entry.competitor.Name,
@@ -313,7 +313,7 @@ func (h *Handler) GetSplits(c *gin.Context) {
 			})
 			position++
 		}
-		
+
 		// Add competitors without this split
 		for _, comp := range competitors {
 			if comp.Status == "3" { // DNF
@@ -333,10 +333,10 @@ func (h *Handler) GetSplits(c *gin.Context) {
 				}
 			}
 		}
-		
+
 		response.Splits = append(response.Splits, standing)
 	}
-	
+
 	c.JSON(http.StatusOK, response)
 }
 
@@ -346,7 +346,7 @@ func formatDuration(d time.Duration) string {
 	minutes := (int(totalSeconds) % 3600) / 60
 	seconds := int(totalSeconds) % 60
 	deciseconds := int((totalSeconds - float64(int(totalSeconds))) * 10)
-	
+
 	if hours > 0 {
 		return fmt.Sprintf("%d:%02d:%02d.%d", hours, minutes, seconds, deciseconds)
 	}

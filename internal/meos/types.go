@@ -101,12 +101,13 @@ func (c *MOPCompetitor) RunningTime() int {
 
 func parseInt(s string) int {
 	var i int
-	fmt.Sscanf(s, "%d", &i)
+	// Ignore error - returns 0 on parse failure which is acceptable for our use case
+	_, _ = fmt.Sscanf(s, "%d", &i)
 	return i
 }
 
 func (c *MOPCompetition) Time() time.Time {
 	dateTimeStr := fmt.Sprintf("%sT%s", c.Date, c.ZeroTime)
-	_time, _ := time.Parse("2006-01-02T15:04:05", dateTimeStr)
-	return _time
+	parsedTime, _ := time.Parse("2006-01-02T15:04:05", dateTimeStr)
+	return parsedTime
 }

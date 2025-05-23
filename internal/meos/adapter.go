@@ -211,10 +211,10 @@ func (a *Adapter) processData(data []byte) (bool, error) {
 	// Update global state with lock
 	a.state.Lock()
 	defer a.state.Unlock()
-	
+
 	a.state.Controls = updateEntities(a.state.Controls, newControls, isMOPComplete)
 	a.state.Clubs = updateEntities(a.state.Clubs, newClubs, isMOPComplete)
-	
+
 	// Update classes and resolve radio controls
 	a.state.Classes = updateEntities(a.state.Classes, newClasses, isMOPComplete)
 	for i := range a.state.Classes {
@@ -229,7 +229,7 @@ func (a *Adapter) processData(data []byte) (bool, error) {
 		}
 		a.state.Classes[i].RadioControls = resolvedRadioControls
 	}
-	
+
 	// Update competitors and resolve references
 	a.state.Competitors = updateEntities(a.state.Competitors, newCompetitors, isMOPComplete)
 	for i := range a.state.Competitors {
