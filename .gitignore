@@ -33,5 +33,5 @@ logs/
 *.log
 
 # Build output
-meos-graphics
+/meos-graphics
 dist/
