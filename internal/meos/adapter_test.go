@@ -18,32 +18,32 @@ func TestAdapter_PollInterval(t *testing.T) {
 	}
 
 	tests := []struct {
-		name               string
-		pollInterval       time.Duration
-		testDuration       time.Duration
-		expectedMinCalls   int
-		expectedMaxCalls   int
+		name             string
+		pollInterval     time.Duration
+		testDuration     time.Duration
+		expectedMinCalls int
+		expectedMaxCalls int
 	}{
 		{
-			name:               "100ms interval",
-			pollInterval:       100 * time.Millisecond,
-			testDuration:       550 * time.Millisecond,
-			expectedMinCalls:   4, // Initial call + 4 polls
-			expectedMaxCalls:   6, // Allow some timing variance
+			name:             "100ms interval",
+			pollInterval:     100 * time.Millisecond,
+			testDuration:     550 * time.Millisecond,
+			expectedMinCalls: 4, // Initial call + 4 polls
+			expectedMaxCalls: 6, // Allow some timing variance
 		},
 		{
-			name:               "500ms interval",
-			pollInterval:       500 * time.Millisecond,
-			testDuration:       1100 * time.Millisecond,
-			expectedMinCalls:   2, // Initial call + 2 polls
-			expectedMaxCalls:   3, // Allow some timing variance
+			name:             "500ms interval",
+			pollInterval:     500 * time.Millisecond,
+			testDuration:     1100 * time.Millisecond,
+			expectedMinCalls: 2, // Initial call + 2 polls
+			expectedMaxCalls: 3, // Allow some timing variance
 		},
 		{
-			name:               "1s interval",
-			pollInterval:       1 * time.Second,
-			testDuration:       2100 * time.Millisecond,
-			expectedMinCalls:   2, // Initial call + 2 polls
-			expectedMaxCalls:   3, // Allow some timing variance
+			name:             "1s interval",
+			pollInterval:     1 * time.Second,
+			testDuration:     2100 * time.Millisecond,
+			expectedMinCalls: 2, // Initial call + 2 polls
+			expectedMaxCalls: 3, // Allow some timing variance
 		},
 	}
 
@@ -52,7 +52,7 @@ func TestAdapter_PollInterval(t *testing.T) {
 			var callCount int32
 
 			// Create test server
-			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 				atomic.AddInt32(&callCount, 1)
 				w.Header().Set("Content-Type", "application/xml")
 				w.WriteHeader(http.StatusOK)
@@ -141,7 +141,7 @@ func TestAdapter_Connect(t *testing.T) {
 	}
 
 	// Create test server
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/xml")
 		w.WriteHeader(http.StatusOK)
 		response := `<?xml version="1.0" encoding="UTF-8"?>

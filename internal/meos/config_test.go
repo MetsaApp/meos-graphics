@@ -99,7 +99,7 @@ func TestConfig_Validate(t *testing.T) {
 
 func TestNewConfig(t *testing.T) {
 	config := NewConfig()
-	
+
 	if config.Hostname != "192.168.112.1" {
 		t.Errorf("NewConfig() Hostname = %v, want %v", config.Hostname, "192.168.112.1")
 	}

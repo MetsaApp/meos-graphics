@@ -44,16 +44,16 @@ func TestPollIntervalFlag(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Reset flags for each test
 			flag.CommandLine = flag.NewFlagSet("test", flag.ContinueOnError)
-			
+
 			// Define flags as in main
 			pollInterval := flag.Duration("poll-interval", 1*time.Second, "Poll interval for MeOS data updates")
-			
+
 			// Parse test args
 			err := flag.CommandLine.Parse(tt.args)
 			if err != nil {
 				t.Fatalf("Failed to parse flags: %v", err)
 			}
-			
+
 			if *pollInterval != tt.expected {
 				t.Errorf("poll-interval = %v, want %v", *pollInterval, tt.expected)
 			}
