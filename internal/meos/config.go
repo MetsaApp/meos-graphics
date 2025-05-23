@@ -27,7 +27,10 @@ func (c *Config) Validate() error {
 		return fmt.Errorf("invalid port number: %d", c.Port)
 	}
 	if c.PollInterval < 100*time.Millisecond {
-		return fmt.Errorf("poll interval too small: %s", c.PollInterval)
+		return fmt.Errorf("poll interval too small (minimum 100ms): %s", c.PollInterval)
+	}
+	if c.PollInterval > 1*time.Hour {
+		return fmt.Errorf("poll interval too large (maximum 1 hour): %s", c.PollInterval)
 	}
 	return nil
 }

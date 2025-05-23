@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/gin-gonic/gin"
 
@@ -22,11 +23,22 @@ func main() {
 	// Parse command line flags
 	simulationMode := flag.Bool("simulation", false, "Run in simulation mode")
 	showVersion := flag.Bool("version", false, "Show version information")
+	pollInterval := flag.Duration("poll-interval", 1*time.Second, "Poll interval for MeOS data updates (e.g., 200ms, 9s, 2m)")
 	flag.Parse()
 
 	if *showVersion {
 		fmt.Printf("meos-graphics version %s\n", version.Version)
 		os.Exit(0)
+	}
+
+	// Validate poll interval
+	if *pollInterval < 100*time.Millisecond {
+		fmt.Printf("Error: poll interval too small (minimum 100ms): %s\n", *pollInterval)
+		os.Exit(1)
+	}
+	if *pollInterval > 1*time.Hour {
+		fmt.Printf("Error: poll interval too large (maximum 1 hour): %s\n", *pollInterval)
+		os.Exit(1)
 	}
 
 	if err := logger.Init(); err != nil {
@@ -55,6 +67,7 @@ func main() {
 	} else {
 		// Configure MeOS adapter
 		config := meos.NewConfig()
+		config.PollInterval = *pollInterval
 		logger.InfoLogger.Printf("MeOS Configuration: %s:%d, Poll Interval: %s", config.Hostname, config.Port, config.PollInterval)
 
 		if err := config.Validate(); err != nil {
