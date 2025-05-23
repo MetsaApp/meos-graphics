@@ -3,6 +3,7 @@ package meos
 import (
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -98,6 +99,7 @@ func TestAdapter_PollInterval(t *testing.T) {
 			config := &Config{
 				Hostname:     host,
 				Port:         port,
+				PortStr:      strconv.Itoa(port),
 				PollInterval: tt.pollInterval,
 				HTTPS:        false,
 			}
@@ -184,6 +186,7 @@ func TestAdapter_Connect(t *testing.T) {
 	config := &Config{
 		Hostname:     host,
 		Port:         port,
+		PortStr:      strconv.Itoa(port),
 		PollInterval: 1 * time.Second,
 		HTTPS:        false,
 	}

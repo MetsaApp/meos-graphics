@@ -46,10 +46,26 @@ meos-graphics/
 
 ## Configuration
 
-The MeOS server configuration is set in `internal/meos/config.go`:
-- Default host: `192.168.112.1` (WSL host IP)
-- Default port: `2009`
-- Default poll interval: `1 second`
+### MeOS Server Configuration
+
+Configure the MeOS server connection using command-line flags:
+
+```bash
+--meos-host <hostname>  # MeOS server hostname or IP (default: localhost)
+--meos-port <port>      # MeOS server port (default: 2009, use 'none' to omit port)
+```
+
+Examples:
+```bash
+# Connect to local MeOS server
+go run ./cmd/meos-graphics
+
+# Connect to remote MeOS server
+go run ./cmd/meos-graphics --meos-host 192.168.1.100 --meos-port 8080
+
+# Connect without port (for reverse proxy setups)
+go run ./cmd/meos-graphics --meos-host meos.example.com --meos-port none
+```
 
 ### Poll Interval Configuration
 
@@ -83,6 +99,9 @@ docker run -p 8090:8090 ghcr.io/metsaapp/meos-graphics:latest
 # Run in simulation mode
 docker run -p 8090:8090 ghcr.io/metsaapp/meos-graphics:latest --simulation
 
+# With custom MeOS server
+docker run -p 8090:8090 ghcr.io/metsaapp/meos-graphics:latest --meos-host 192.168.1.100 --meos-port 8080
+
 # With custom poll interval (default: 1s)
 docker run -p 8090:8090 ghcr.io/metsaapp/meos-graphics:latest --poll-interval 500ms
 
@@ -97,6 +116,9 @@ go run ./cmd/meos-graphics
 
 # Simulation mode
 go run ./cmd/meos-graphics --simulation
+
+# Custom MeOS server
+go run ./cmd/meos-graphics --meos-host 192.168.1.100 --meos-port 8080
 
 # Custom poll interval
 go run ./cmd/meos-graphics --poll-interval 200ms

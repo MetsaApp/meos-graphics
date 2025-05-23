@@ -24,6 +24,8 @@ func main() {
 	simulationMode := flag.Bool("simulation", false, "Run in simulation mode")
 	showVersion := flag.Bool("version", false, "Show version information")
 	pollInterval := flag.Duration("poll-interval", 1*time.Second, "Poll interval for MeOS data updates (e.g., 200ms, 9s, 2m)")
+	meosHost := flag.String("meos-host", "localhost", "MeOS server hostname or IP address")
+	meosPort := flag.String("meos-port", "2009", "MeOS server port (use 'none' to omit port from URL)")
 	flag.Parse()
 
 	if *showVersion {
@@ -67,8 +69,16 @@ func main() {
 	} else {
 		// Configure MeOS adapter
 		config := meos.NewConfig()
+		config.Hostname = *meosHost
+		config.PortStr = *meosPort
 		config.PollInterval = *pollInterval
-		logger.InfoLogger.Printf("MeOS Configuration: %s:%d, Poll Interval: %s", config.Hostname, config.Port, config.PollInterval)
+
+		// Log configuration based on port setting
+		if config.PortStr == "none" {
+			logger.InfoLogger.Printf("MeOS Configuration: %s (no port), Poll Interval: %s", config.Hostname, config.PollInterval)
+		} else {
+			logger.InfoLogger.Printf("MeOS Configuration: %s:%s, Poll Interval: %s", config.Hostname, config.PortStr, config.PollInterval)
+		}
 
 		if err := config.Validate(); err != nil {
 			logger.ErrorLogger.Printf("Invalid configuration: %v", err)
