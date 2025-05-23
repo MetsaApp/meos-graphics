@@ -69,7 +69,7 @@ func isValidHostname(hostname string) bool {
 	// Check for valid characters and format
 	labels := strings.Split(hostname, ".")
 	for _, label := range labels {
-		if len(label) == 0 || len(label) > 63 {
+		if label == "" || len(label) > 63 {
 			return false
 		}
 
