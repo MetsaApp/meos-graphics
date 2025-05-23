@@ -17,15 +17,15 @@ type StartListEntry struct {
 }
 
 type ResultEntry struct {
-	Position   int         `json:"position"`
-	Name       string      `json:"name"`
-	Club       string      `json:"club"`
-	StartTime  time.Time   `json:"startTime"`
-	FinishTime *time.Time  `json:"finishTime,omitempty"`
-	Time       *string     `json:"time,omitempty"`
-	Status     string      `json:"status"`
-	TimeBehind *string     `json:"timeBehind,omitempty"`
-	RadioTimes []RadioTime `json:"radioTimes,omitempty"`
+	Position       int         `json:"position"`
+	Name           string      `json:"name"`
+	Club           string      `json:"club"`
+	StartTime      time.Time   `json:"startTime"`
+	FinishTime     *time.Time  `json:"finishTime,omitempty"`
+	Time           *string     `json:"time,omitempty"`
+	Status         string      `json:"status"`
+	TimeDifference *string     `json:"timeDifference,omitempty"`
+	RadioTimes     []RadioTime `json:"radioTimes,omitempty"`
 }
 
 type RadioTime struct {
@@ -35,13 +35,13 @@ type RadioTime struct {
 }
 
 type SplitTime struct {
-	Position    int        `json:"position"`
-	Name        string     `json:"name"`
-	Club        string     `json:"club"`
-	SplitTime   *time.Time `json:"splitTime,omitempty"`
-	ElapsedTime *string    `json:"elapsedTime,omitempty"`
-	TimeBehind  *string    `json:"timeBehind,omitempty"`
-	Status      string     `json:"status"`
+	Position       int        `json:"position"`
+	Name           string     `json:"name"`
+	Club           string     `json:"club"`
+	SplitTime      *time.Time `json:"splitTime,omitempty"`
+	ElapsedTime    *string    `json:"elapsedTime,omitempty"`
+	TimeDifference *string    `json:"timeDifference,omitempty"`
+	Status         string     `json:"status"`
 }
 
 type SplitStanding struct {

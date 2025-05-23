@@ -159,15 +159,15 @@ func (h *Handler) GetResults(c *gin.Context) {
 		}
 
 		results = append(results, ResultEntry{
-			Position:   position,
-			Name:       comp.Name,
-			Club:       comp.Club.Name,
-			StartTime:  comp.StartTime,
-			FinishTime: comp.FinishTime,
-			Time:       &timeStr,
-			Status:     "OK",
-			TimeBehind: timeBehind,
-			RadioTimes: radioTimes,
+			Position:       position,
+			Name:           comp.Name,
+			Club:           comp.Club.Name,
+			StartTime:      comp.StartTime,
+			FinishTime:     comp.FinishTime,
+			Time:           &timeStr,
+			Status:         "OK",
+			TimeDifference: timeBehind,
+			RadioTimes:     radioTimes,
 		})
 		position++
 	}
@@ -305,13 +305,13 @@ func (h *Handler) GetSplits(c *gin.Context) {
 			}
 
 			standing.Standings = append(standing.Standings, SplitTime{
-				Position:    position,
-				Name:        entry.competitor.Name,
-				Club:        entry.competitor.Club.Name,
-				SplitTime:   entry.splitTime,
-				ElapsedTime: &elapsedStr,
-				TimeBehind:  timeBehind,
-				Status:      "OK",
+				Position:       position,
+				Name:           entry.competitor.Name,
+				Club:           entry.competitor.Club.Name,
+				SplitTime:      entry.splitTime,
+				ElapsedTime:    &elapsedStr,
+				TimeDifference: timeBehind,
+				Status:         "OK",
 			})
 			position++
 		}
