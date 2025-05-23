@@ -159,9 +159,9 @@ func (h *Handler) GetResults(c *gin.Context) {
 		}
 
 		results = append(results, ResultEntry{
-			Position:   position,
-			Name:       comp.Name,
-			Club:       comp.Club.Name,
+			Position:       position,
+			Name:           comp.Name,
+			Club:           comp.Club.Name,
 			StartTime:      comp.StartTime,
 			FinishTime:     comp.FinishTime,
 			Time:           &timeStr,

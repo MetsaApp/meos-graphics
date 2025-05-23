@@ -35,13 +35,13 @@ type RadioTime struct {
 }
 
 type SplitTime struct {
-	Position        int        `json:"position"`
-	Name            string     `json:"name"`
-	Club            string     `json:"club"`
-	SplitTime       *time.Time `json:"splitTime,omitempty"`
-	ElapsedTime     *string    `json:"elapsedTime,omitempty"`
-	TimeDifference  *string    `json:"timeDifference,omitempty"`
-	Status          string     `json:"status"`
+	Position       int        `json:"position"`
+	Name           string     `json:"name"`
+	Club           string     `json:"club"`
+	SplitTime      *time.Time `json:"splitTime,omitempty"`
+	ElapsedTime    *string    `json:"elapsedTime,omitempty"`
+	TimeDifference *string    `json:"timeDifference,omitempty"`
+	Status         string     `json:"status"`
 }
 
 type SplitStanding struct {
