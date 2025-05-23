@@ -1,0 +1,31 @@
+# Git files
+.git/
+.gitignore
+
+# Documentation
+*.md
+docs/
+CLAUDE.md
+
+# CI/CD
+.github/
+release-please-config.json
+.release-please-manifest.json
+
+# Build artifacts
+dist/
+meos-graphics
+
+# Logs
+logs/
+*.log
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
