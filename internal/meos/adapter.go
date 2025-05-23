@@ -261,7 +261,7 @@ func (a *Adapter) processData(data []byte) (bool, error) {
 	return true, nil
 }
 
-func updateEntities[T models.Entity](current []T, updates []T, isComplete bool) []T {
+func updateEntities[T models.Entity](current, updates []T, isComplete bool) []T {
 	if isComplete {
 		return append([]T{}, updates...)
 	}
@@ -288,30 +288,54 @@ func updateEntities[T models.Entity](current []T, updates []T, isComplete bool) 
 
 func (a *Adapter) convertControls(source interface{}, isComplete bool) []models.Control {
 	if isComplete {
-		return a.convertControlList(source.(MOPComplete).Controls)
+		if complete, ok := source.(MOPComplete); ok {
+			return a.convertControlList(complete.Controls)
+		}
+	} else {
+		if diff, ok := source.(MOPDiff); ok {
+			return a.convertControlList(diff.Controls)
+		}
 	}
-	return a.convertControlList(source.(MOPDiff).Controls)
+	return []models.Control{}
 }
 
 func (a *Adapter) convertClasses(source interface{}, isComplete bool) []models.Class {
 	if isComplete {
-		return a.convertClassList(source.(MOPComplete).Classes)
+		if complete, ok := source.(MOPComplete); ok {
+			return a.convertClassList(complete.Classes)
+		}
+	} else {
+		if diff, ok := source.(MOPDiff); ok {
+			return a.convertClassList(diff.Classes)
+		}
 	}
-	return a.convertClassList(source.(MOPDiff).Classes)
+	return []models.Class{}
 }
 
 func (a *Adapter) convertClubs(source interface{}, isComplete bool) []models.Club {
 	if isComplete {
-		return a.convertClubList(source.(MOPComplete).Organizations)
+		if complete, ok := source.(MOPComplete); ok {
+			return a.convertClubList(complete.Organizations)
+		}
+	} else {
+		if diff, ok := source.(MOPDiff); ok {
+			return a.convertClubList(diff.Organizations)
+		}
 	}
-	return a.convertClubList(source.(MOPDiff).Organizations)
+	return []models.Club{}
 }
 
 func (a *Adapter) convertCompetitors(source interface{}, isComplete bool) []models.Competitor {
 	if isComplete {
-		return a.convertCompetitorList(source.(MOPComplete).Competitors)
+		if complete, ok := source.(MOPComplete); ok {
+			return a.convertCompetitorList(complete.Competitors)
+		}
+	} else {
+		if diff, ok := source.(MOPDiff); ok {
+			return a.convertCompetitorList(diff.Competitors)
+		}
 	}
-	return a.convertCompetitorList(source.(MOPDiff).Competitors)
+	return []models.Competitor{}
 }
 
 func (a *Adapter) convertControlList(controls []MOPControl) []models.Control {

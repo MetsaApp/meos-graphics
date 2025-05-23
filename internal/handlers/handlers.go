@@ -143,17 +143,18 @@ func (h *Handler) GetResults(c *gin.Context) {
 
 		for _, rc := range radioControls {
 			for _, split := range comp.Splits {
-				if split.Control.ID == rc.ID {
-					elapsed := split.PassingTime.Sub(comp.StartTime)
-					splitTime := elapsed - prevTime
-					radioTimes = append(radioTimes, RadioTime{
-						ControlName: split.Control.Name,
-						ElapsedTime: formatDuration(elapsed),
-						SplitTime:   formatDuration(splitTime),
-					})
-					prevTime = elapsed
-					break
+				if split.Control.ID != rc.ID {
+					continue
 				}
+				elapsed := split.PassingTime.Sub(comp.StartTime)
+				splitTime := elapsed - prevTime
+				radioTimes = append(radioTimes, RadioTime{
+					ControlName: split.Control.Name,
+					ElapsedTime: formatDuration(elapsed),
+					SplitTime:   formatDuration(splitTime),
+				})
+				prevTime = elapsed
+				break
 			}
 		}
 
@@ -230,7 +231,8 @@ func (h *Handler) GetSplits(c *gin.Context) {
 	}
 
 	// Process each control (including finish)
-	allControls := append(radioControls, models.Control{ID: -1, Name: "Finish"})
+	allControls := radioControls
+	allControls = append(allControls, models.Control{ID: -1, Name: "Finish"})
 
 	for _, control := range allControls {
 		standing := SplitStanding{
