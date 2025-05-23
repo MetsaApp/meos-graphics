@@ -107,6 +107,39 @@ When modifying this codebase:
 3. **Logging**: Use appropriate log levels (Info, Error, Debug)
 4. **Testing**: Run with simulation mode to verify changes
 5. **Concurrency**: Always protect shared state with appropriate locks
+6. **Commits**: Use conventional commits for automatic versioning
+
+## Versioning and Release Process
+
+### Conventional Commits
+This project uses conventional commits for automatic semantic versioning:
+
+- `feat:` - New features → minor version bump (0.x.0)
+- `fix:` - Bug fixes → patch version bump (0.0.x)
+- `feat!:` or `BREAKING CHANGE:` → major version bump (x.0.0)
+- `docs:`, `style:`, `refactor:`, `test:`, `chore:` → no version bump
+
+### Making Changes
+1. Create feature branch from `main`
+2. Make changes with conventional commits
+3. Push branch and create PR
+4. After merge, release-please will handle versioning
+
+### Release Automation
+Releases are fully automated via GitHub Actions:
+
+1. **release-please** monitors `main` branch
+2. Creates/updates a release PR when changes detected
+3. When release PR is merged:
+   - Creates GitHub release with changelog
+   - Builds binaries for all platforms
+   - Publishes Docker images to ghcr.io
+   - Tags release with semantic version
+
+### Docker Images
+- `ghcr.io/metsaapp/meos-graphics:latest`
+- `ghcr.io/metsaapp/meos-graphics:vX.Y.Z`
+- Multi-platform: linux/amd64, linux/arm64
 
 ## Common Issues and Solutions
 
@@ -137,7 +170,7 @@ lsof -i :8090 | grep LISTEN | awk '{print $2}' | xargs kill
 
 - WebSocket support for real-time updates
 - Configuration file support (YAML/JSON)
-- Docker containerization
+- ~~Docker containerization~~ ✅ Done
 - Prometheus metrics endpoint
 - OpenAPI/Swagger documentation
 - Database persistence option

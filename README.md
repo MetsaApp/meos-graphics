@@ -53,14 +53,31 @@ The MeOS server configuration is set in `internal/meos/config.go`:
 
 ## Running
 
-### Normal Mode
+### Using Docker (Recommended)
 ```bash
-go run ./cmd/meos-graphics
+# Pull from GitHub Container Registry
+docker pull ghcr.io/metsaapp/meos-graphics:latest
+
+# Run in normal mode
+docker run -p 8090:8090 ghcr.io/metsaapp/meos-graphics:latest
+
+# Run in simulation mode
+docker run -p 8090:8090 ghcr.io/metsaapp/meos-graphics:latest --simulation
+
+# With persistent logs
+docker run -p 8090:8090 -v $(pwd)/logs:/app/logs ghcr.io/metsaapp/meos-graphics:latest
 ```
 
-### Simulation Mode
+### From Source
 ```bash
+# Normal mode
+go run ./cmd/meos-graphics
+
+# Simulation mode
 go run ./cmd/meos-graphics --simulation
+
+# Show version
+go run ./cmd/meos-graphics --version
 ```
 
 The server will start on port 8090.
@@ -83,6 +100,60 @@ Features:
 ## Dependencies
 
 - [gin-gonic/gin](https://github.com/gin-gonic/gin) - HTTP web framework
+
+## Versioning and Releases
+
+This project uses [Semantic Versioning](https://semver.org/) and [Conventional Commits](https://www.conventionalcommits.org/) for automatic version management.
+
+### Conventional Commits
+
+All commits should follow the conventional commit format:
+
+```
+<type>(<scope>): <subject>
+
+<body>
+
+<footer>
+```
+
+Types:
+- `feat:` - New features (triggers minor version bump)
+- `fix:` - Bug fixes (triggers patch version bump)
+- `docs:` - Documentation changes
+- `style:` - Code style changes (formatting, etc.)
+- `refactor:` - Code refactoring
+- `test:` - Test additions or corrections
+- `chore:` - Maintenance tasks
+- `ci:` - CI/CD changes
+- `build:` - Build system changes
+
+Breaking changes:
+- Add `!` after type: `feat!: breaking change`
+- Or add `BREAKING CHANGE:` in the commit body
+- These trigger major version bumps
+
+### Release Process
+
+Releases are fully automated using [release-please](https://github.com/googleapis/release-please):
+
+1. Merge PRs with conventional commits to `main`
+2. Release-please creates/updates a release PR
+3. When the release PR is merged:
+   - A new GitHub release is created
+   - Version numbers are bumped
+   - CHANGELOG.md is generated
+   - Binary artifacts are built for multiple platforms
+   - Docker images are published to ghcr.io
+
+### Docker Images
+
+Docker images are automatically published to GitHub Container Registry:
+
+- `ghcr.io/metsaapp/meos-graphics:latest` - Latest release
+- `ghcr.io/metsaapp/meos-graphics:vX.Y.Z` - Specific version
+
+Images are multi-platform (linux/amd64, linux/arm64).
 
 ## Architecture
 
