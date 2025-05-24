@@ -166,12 +166,27 @@ lsof -i :8090 | grep LISTEN | awk '{print $2}' | xargs kill
 3. **Manual Testing**: Use curl or a REST client to verify endpoints
 4. **Load Testing**: Simulation mode can handle rapid requests
 
-## Future Enhancements to Consider
+## Swagger Documentation
 
-- WebSocket support for real-time updates
-- Configuration file support (YAML/JSON)
-- ~~Docker containerization~~ ✅ Done
-- Prometheus metrics endpoint
-- OpenAPI/Swagger documentation
-- Database persistence option
-- Multi-event support
+### Single Source of Truth
+The Swagger/OpenAPI documentation is generated from annotations in `cmd/meos-graphics/main.go`. To ensure consistency:
+
+1. **All API metadata must be defined in main.go annotations**
+2. **Never manually edit generated files** (docs.go, swagger.json, swagger.yaml)
+3. **Validation script** at `scripts/validate-swagger.sh` ensures docs match source annotations
+4. **Pre-commit hooks** automatically check for drift between source and generated docs
+
+### Updating API Documentation
+```bash
+# Update annotations in cmd/meos-graphics/main.go, then:
+swag init -g cmd/meos-graphics/main.go --parseDependency --parseInternal
+
+# Validate consistency
+./scripts/validate-swagger.sh
+```
+
+## Important Instructions
+
+- NEVER add the Claude Code byline to pull requests or commits
+- This includes removing "🤖 Generated with [Claude Code](https://claude.ai/code)" or "Co-Authored-By: Claude <noreply@anthropic.com>"
+- Keep commit messages clean and professional without AI attribution

@@ -23,10 +23,10 @@ type Adapter struct {
 	phaseResults time.Duration
 }
 
-func NewAdapter(appState *state.State, duration, phaseStart, phaseRunning, phaseResults time.Duration) *Adapter {
+func NewAdapter(appState *state.State, duration, phaseStart, phaseRunning, phaseResults time.Duration, massStart bool) *Adapter {
 	return &Adapter{
 		state:        appState,
-		generator:    NewGenerator(duration, phaseStart, phaseRunning, phaseResults),
+		generator:    NewGenerator(duration, phaseStart, phaseRunning, phaseResults, massStart),
 		stopChan:     make(chan struct{}),
 		duration:     duration,
 		phaseStart:   phaseStart,
@@ -109,10 +109,14 @@ func (a *Adapter) updateSimulation() {
 	// Get updated competitors
 	competitors := a.generator.UpdateSimulation(currentTime)
 
-	// Update state
-	a.state.Lock()
-	a.state.Competitors = competitors
-	a.state.Unlock()
+	// Get current state
+	event := a.state.GetEvent()
+	controls := a.state.GetControls()
+	classes := a.state.GetClasses()
+	clubs := a.state.GetClubs()
+
+	// Update state atomically and notify listeners
+	a.state.UpdateFromMeOS(event, controls, classes, clubs, competitors)
 
 	// Log phase changes
 	elapsed := currentTime.Sub(a.generator.startTime)
@@ -134,4 +138,17 @@ func (a *Adapter) updateSimulation() {
 		logger.InfoLogger.Println("Simulation cycle complete, restarting...")
 		a.generator.resetSimulation()
 	}
+}
+
+// GetSimulationStatus returns the current simulation phase and timing
+func (a *Adapter) GetSimulationStatus() (phase string, nextPhaseIn time.Duration, isSimulation bool) {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+
+	if !a.connected {
+		return "", 0, false
+	}
+
+	phase, nextPhaseIn = a.generator.GetCurrentPhase()
+	return phase, nextPhaseIn, true
 }

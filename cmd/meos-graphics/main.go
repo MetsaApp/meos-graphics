@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -9,16 +10,39 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/cobra"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 
 	"meos-graphics/internal/cmd"
 	"meos-graphics/internal/handlers"
 	"meos-graphics/internal/logger"
 	"meos-graphics/internal/meos"
 	"meos-graphics/internal/middleware"
+	"meos-graphics/internal/service"
 	"meos-graphics/internal/simulation"
+	"meos-graphics/internal/sse"
 	"meos-graphics/internal/state"
 	"meos-graphics/internal/version"
+	"meos-graphics/internal/web"
+
+	_ "meos-graphics/docs" // Import generated swagger docs
 )
+
+// @title meos-graphics
+// @version 0.0.0 x-release-please-version
+// @description REST API for accessing orienteering competition data from MeOS
+// @termsOfService http://swagger.io/terms/
+
+// @contact.name @malpou
+// @contact.url https://github.com/MetsaApp/meos-graphics
+// @contact.email malthe@grundtvigsvej.dk
+
+// @license.name MIT
+// @license.url https://opensource.org/licenses/MIT
+
+// @host localhost:8090
+// @BasePath /
+// @schemes http https
 
 func main() {
 	rootCmd := cmd.NewRootCommand()
@@ -87,8 +111,9 @@ func run(_ *cobra.Command, _ []string) error {
 				phaseSum, cmd.SimulationDuration)
 		}
 
-		logger.InfoLogger.Printf("Simulation timing: Total=%s, Start=%s, Running=%s, Results=%s",
-			cmd.SimulationDuration, cmd.SimulationPhaseStart, cmd.SimulationPhaseRunning, cmd.SimulationPhaseResults)
+		logger.InfoLogger.Printf("Simulation timing: Total=%s, Start=%s, Running=%s, Results=%s, MassStart=%v",
+			cmd.SimulationDuration, cmd.SimulationPhaseStart, cmd.SimulationPhaseRunning, cmd.SimulationPhaseResults,
+			cmd.SimulationMassStart)
 	}
 
 	// Initialize global state
@@ -101,10 +126,14 @@ func run(_ *cobra.Command, _ []string) error {
 		Stop() error
 	}
 
+	var simulationAdapter *simulation.Adapter
+
 	if cmd.SimulationMode {
 		// Use simulation adapter with timing configuration
-		adapter = simulation.NewAdapter(appState, cmd.SimulationDuration,
-			cmd.SimulationPhaseStart, cmd.SimulationPhaseRunning, cmd.SimulationPhaseResults)
+		simulationAdapter = simulation.NewAdapter(appState, cmd.SimulationDuration,
+			cmd.SimulationPhaseStart, cmd.SimulationPhaseRunning, cmd.SimulationPhaseResults,
+			cmd.SimulationMassStart)
+		adapter = simulationAdapter
 	} else {
 		// Configure MeOS adapter
 		config := meos.NewConfig()
@@ -144,28 +173,104 @@ func run(_ *cobra.Command, _ []string) error {
 		}
 	}
 
+	// Set up SSE hub
+	sseHub := sse.NewHub()
+	go sseHub.Run()
+
+	// Create service layer
+	svc := service.New(appState)
+
+	// Set up state change notifications
+	appState.OnUpdate(func() {
+		sseHub.BroadcastUpdate("update", gin.H{"timestamp": time.Now().Unix()})
+	})
+
 	// Set up HTTP server
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
 	router.Use(gin.Recovery())
 	router.Use(middleware.Logger())
 
+	// Load HTML templates
+	router.SetHTMLTemplate(web.GetTemplates())
+
 	// Create handlers
 	h := handlers.New(appState)
+	webHandler := web.New(svc)
 
 	// Health check endpoint
 	router.GET("/health", func(c *gin.Context) {
-		c.JSON(200, gin.H{
+		response := gin.H{
 			"status":         "ok",
 			"meos_connected": true,
-		})
+			"sse_clients":    sseHub.GetConnectedClients(),
+		}
+
+		// Add simulation status if in simulation mode
+		if simulationAdapter != nil {
+			phase, nextPhaseIn, _ := simulationAdapter.GetSimulationStatus()
+			response["simulation"] = gin.H{
+				"phase":       phase,
+				"nextPhaseIn": nextPhaseIn.Seconds(),
+			}
+		}
+
+		c.JSON(200, response)
 	})
 
-	// API endpoints
-	router.GET("/classes", h.GetClasses)
-	router.GET("/classes/:classId/startlist", h.GetStartList)
-	router.GET("/classes/:classId/results", h.GetResults)
-	router.GET("/classes/:classId/splits", h.GetSplits)
+	// API endpoints (REST)
+	api := router.Group("/")
+	api.GET("/classes", h.GetClasses)
+	api.GET("/classes/:classId/startlist", h.GetStartList)
+	api.GET("/classes/:classId/results", h.GetResults)
+	api.GET("/classes/:classId/splits", h.GetSplits)
+
+	// Web interface endpoints
+	webGroup := router.Group("/web")
+	webGroup.GET("/", webHandler.HomePage)
+	webGroup.GET("/classes/:classId", webHandler.ClassPage)
+	webGroup.GET("/classes/:classId/startlist", webHandler.StartListPartial)
+	webGroup.GET("/classes/:classId/results", webHandler.ResultsPartial)
+	webGroup.GET("/classes/:classId/splits", webHandler.SplitsPartial)
+
+	// SSE endpoint
+	router.GET("/sse", sseHub.HandleSSE)
+
+	// Simulation status endpoint (for web UI)
+	router.GET("/simulation/status", func(c *gin.Context) {
+		// Always return 200 since the web UI polls this endpoint
+		// but only include simulation data when in simulation mode
+		if simulationAdapter != nil {
+			phase, nextPhaseIn, _ := simulationAdapter.GetSimulationStatus()
+			c.JSON(200, gin.H{
+				"enabled":     true,
+				"phase":       phase,
+				"nextPhaseIn": nextPhaseIn.Seconds(),
+			})
+		} else {
+			c.JSON(200, gin.H{
+				"enabled": false,
+			})
+		}
+	})
+
+	// Swagger documentation
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
+	// API documentation redirect
+	router.GET("/docs", func(c *gin.Context) {
+		c.Redirect(http.StatusMovedPermanently, "/swagger/index.html")
+	})
+
+	// Redirect root to web interface
+	router.GET("/", func(c *gin.Context) {
+		c.Redirect(http.StatusMovedPermanently, "/web")
+	})
+
+	// Serve empty favicon to avoid 404 errors
+	router.GET("/favicon.ico", func(c *gin.Context) {
+		c.Data(http.StatusOK, "image/x-icon", []byte{})
+	})
 
 	// Handle graceful shutdown
 	sigChan := make(chan os.Signal, 1)

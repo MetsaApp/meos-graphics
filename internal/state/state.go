@@ -7,12 +7,13 @@ import (
 )
 
 type State struct {
-	mu          sync.RWMutex
-	Event       *models.Event
-	Controls    []models.Control
-	Classes     []models.Class
-	Clubs       []models.Club
-	Competitors []models.Competitor
+	mu              sync.RWMutex
+	Event           *models.Event
+	Controls        []models.Control
+	Classes         []models.Class
+	Clubs           []models.Club
+	Competitors     []models.Competitor
+	updateCallbacks []func()
 }
 
 func New() *State {
@@ -99,4 +100,98 @@ func (s *State) GetCompetitor(id int) *models.Competitor {
 		}
 	}
 	return nil
+}
+
+// OnUpdate registers a callback to be called when the state is updated
+func (s *State) OnUpdate(callback func()) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.updateCallbacks = append(s.updateCallbacks, callback)
+}
+
+// notifyUpdate calls all registered update callbacks
+func (s *State) notifyUpdate() {
+	s.mu.RLock()
+	callbacks := make([]func(), len(s.updateCallbacks))
+	copy(callbacks, s.updateCallbacks)
+	s.mu.RUnlock()
+
+	for _, cb := range callbacks {
+		cb()
+	}
+}
+
+// UpdateFromMeOS updates the state with new data from MeOS and notifies listeners only if data changed
+func (s *State) UpdateFromMeOS(event *models.Event, controls []models.Control, classes []models.Class, clubs []models.Club, competitors []models.Competitor) {
+	s.mu.Lock()
+
+	// Check if data has actually changed
+	hasChanges := false
+
+	// Simple change detection - could be optimized further
+	if !hasChanges && (s.Event == nil && event != nil || s.Event != nil && event == nil) {
+		hasChanges = true
+	}
+	if !hasChanges && len(s.Controls) != len(controls) {
+		hasChanges = true
+	}
+	if !hasChanges && len(s.Classes) != len(classes) {
+		hasChanges = true
+	}
+	if !hasChanges && len(s.Clubs) != len(clubs) {
+		hasChanges = true
+	}
+	if !hasChanges && len(s.Competitors) != len(competitors) {
+		hasChanges = true
+	}
+
+	// For competitors, check if any have different status or finish times
+	if !hasChanges && len(s.Competitors) == len(competitors) {
+		for i := range competitors {
+			if i >= len(s.Competitors) {
+				hasChanges = true
+				break
+			}
+			if s.Competitors[i].Status != competitors[i].Status {
+				hasChanges = true
+				break
+			}
+			if (s.Competitors[i].FinishTime == nil) != (competitors[i].FinishTime == nil) {
+				hasChanges = true
+				break
+			}
+			if len(s.Competitors[i].Splits) != len(competitors[i].Splits) {
+				hasChanges = true
+				break
+			}
+			// Also check if split times have changed
+			for j := range competitors[i].Splits {
+				if j >= len(s.Competitors[i].Splits) {
+					hasChanges = true
+					break
+				}
+				if s.Competitors[i].Splits[j].PassingTime != competitors[i].Splits[j].PassingTime {
+					hasChanges = true
+					break
+				}
+			}
+			if hasChanges {
+				break
+			}
+		}
+	}
+
+	// Update the state
+	s.Event = event
+	s.Controls = controls
+	s.Classes = classes
+	s.Clubs = clubs
+	s.Competitors = competitors
+
+	s.mu.Unlock()
+
+	// Only notify if there were changes
+	if hasChanges {
+		s.notifyUpdate()
+	}
 }

@@ -43,6 +43,10 @@ meos-graphics [flags]
 - **Default**: 15m0s
 - **Description**: Total simulation cycle duration (only with --simulation)
 
+### --simulation-mass-start
+
+- **Description**: Use mass start instead of staggered starts (only with --simulation)
+
 ### --simulation-phase-results
 
 - **Type**: duration

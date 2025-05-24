@@ -29,11 +29,35 @@ pre-commit:
       run: |
         go run ./cmd/generate-docs
         if ! git diff --quiet docs/CLI_FLAGS.md; then
-          echo "Documentation is out of date. The updated docs have been generated."
+          echo "CLI documentation is out of date. The updated docs have been generated."
           echo "Please add the changes to your commit."
           exit 1
         fi
-      tags: docs documentation
+      tags: docs documentation cli
+      skip:
+        - merge
+        - rebase
+    
+    swagger-check:
+      run: |
+        # Install swag if not present
+        if ! command -v swag &> /dev/null; then
+          go install github.com/swaggo/swag/cmd/swag@latest
+        fi
+        
+        # Generate swagger docs
+        swag init -g cmd/meos-graphics/main.go --parseDependency --parseInternal
+        
+        # Validate that generated docs match source annotations
+        ./scripts/validate-swagger.sh
+        
+        # Check if docs changed
+        if ! git diff --quiet docs/swagger.json docs/swagger.yaml docs/docs.go; then
+          echo "Swagger documentation is out of date. The updated docs have been generated."
+          echo "Please add the changes to your commit."
+          exit 1
+        fi
+      tags: docs documentation swagger api
       skip:
         - merge
         - rebase

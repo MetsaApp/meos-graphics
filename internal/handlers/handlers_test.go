@@ -12,6 +12,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"meos-graphics/internal/models"
+	"meos-graphics/internal/service"
 	"meos-graphics/internal/state"
 	"meos-graphics/internal/testhelpers"
 )
@@ -50,7 +51,7 @@ func TestHandler_GetClasses(t *testing.T) {
 		t.Errorf("Status code = %d, want %d", w.Code, http.StatusOK)
 	}
 
-	var classes []ClassInfo
+	var classes []service.ClassInfo
 	err := json.Unmarshal(w.Body.Bytes(), &classes)
 	if err != nil {
 		t.Fatalf("Failed to unmarshal response: %v", err)
@@ -81,7 +82,7 @@ func TestHandler_GetClasses_Empty(t *testing.T) {
 		t.Errorf("Status code = %d, want %d", w.Code, http.StatusOK)
 	}
 
-	var classes []ClassInfo
+	var classes []service.ClassInfo
 	err := json.Unmarshal(w.Body.Bytes(), &classes)
 	if err != nil {
 		t.Fatalf("Failed to unmarshal response: %v", err)
@@ -148,7 +149,7 @@ func TestHandler_GetStartList(t *testing.T) {
 		t.Errorf("Status code = %d, want %d", w.Code, http.StatusOK)
 	}
 
-	var startList []StartListEntry
+	var startList []service.StartListEntry
 	err := json.Unmarshal(w.Body.Bytes(), &startList)
 	if err != nil {
 		t.Fatalf("Failed to unmarshal response: %v", err)
@@ -226,7 +227,7 @@ func TestHandler_GetResults(t *testing.T) {
 	comp3.Status = "3" // DNF
 
 	comp4 := testhelpers.CreateTestCompetitor(4, "Sarah Wilson", club2, class)
-	comp4.Status = "0" // DNS
+	comp4.Status = "5" // DNS
 
 	comp5 := testhelpers.CreateTestCompetitor(5, "Tom Brown", club1, class)
 	comp5.Status = "4" // MP (Mispunch)
@@ -249,7 +250,7 @@ func TestHandler_GetResults(t *testing.T) {
 		t.Errorf("Status code = %d, want %d", w.Code, http.StatusOK)
 	}
 
-	var results []ResultEntry
+	var results []service.ResultEntry
 	err := json.Unmarshal(w.Body.Bytes(), &results)
 	if err != nil {
 		t.Fatalf("Failed to unmarshal response: %v", err)
@@ -342,7 +343,7 @@ func TestHandler_GetResults_EmptyClass(t *testing.T) {
 		t.Errorf("Status code = %d, want %d", w.Code, http.StatusOK)
 	}
 
-	var results []ResultEntry
+	var results []service.ResultEntry
 	err := json.Unmarshal(w.Body.Bytes(), &results)
 	if err != nil {
 		t.Fatalf("Failed to unmarshal response: %v", err)
@@ -402,7 +403,7 @@ func TestHandler_GetSplits(t *testing.T) {
 		t.Errorf("Status code = %d, want %d", w.Code, http.StatusOK)
 	}
 
-	var response SplitsResponse
+	var response service.SplitsResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	if err != nil {
 		t.Fatalf("Failed to unmarshal response: %v", err)
@@ -508,7 +509,7 @@ func TestHandler_RadioTimeCalculation(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/classes/1/results", nil)
 	router.ServeHTTP(w, req)
 
-	var results []ResultEntry
+	var results []service.ResultEntry
 	err := json.Unmarshal(w.Body.Bytes(), &results)
 	if err != nil {
 		t.Fatalf("Failed to unmarshal response: %v", err)

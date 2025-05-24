@@ -11,6 +11,11 @@
         {
           "type": "generic",
           "path": "internal/version/version.go"
+        },
+        {
+          "type": "generic",
+          "path": "cmd/meos-graphics/main.go",
+          "glob": "// @version {version} x-release-please-version"
         }
       ]
     }
