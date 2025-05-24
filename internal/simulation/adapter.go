@@ -43,6 +43,8 @@ func (a *Adapter) Connect() error {
 
 	a.mu.Lock()
 	a.connected = true
+	// Recreate the stop channel in case it was closed before
+	a.stopChan = make(chan struct{})
 	a.mu.Unlock()
 
 	logger.InfoLogger.Printf("Simulation initialized with %d classes and %d competitors",
