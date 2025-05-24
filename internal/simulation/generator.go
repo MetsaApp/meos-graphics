@@ -25,11 +25,21 @@ type Generator struct {
 	controls       []models.Control
 	competitors    []models.Competitor
 	rnd            *rand.Rand
+
+	// Timing configuration
+	duration     time.Duration
+	phaseStart   time.Duration
+	phaseRunning time.Duration
+	phaseResults time.Duration
 }
 
-func NewGenerator() *Generator {
+func NewGenerator(duration, phaseStart, phaseRunning, phaseResults time.Duration) *Generator {
 	return &Generator{
-		rnd: rand.New(rand.NewSource(time.Now().UnixNano())),
+		rnd:          rand.New(rand.NewSource(time.Now().UnixNano())),
+		duration:     duration,
+		phaseStart:   phaseStart,
+		phaseRunning: phaseRunning,
+		phaseResults: phaseResults,
 	}
 }
 
@@ -123,25 +133,26 @@ func (g *Generator) generateCompetitors(baseTime time.Time) []models.Competitor 
 func (g *Generator) UpdateSimulation(currentTime time.Time) []models.Competitor {
 	elapsed := currentTime.Sub(g.startTime)
 
-	// Phase 1: 0-3 minutes - Only start list
-	if elapsed < 3*time.Minute {
+	// Phase 1: Start list only
+	if elapsed < g.phaseStart {
 		return g.competitors
 	}
 
-	// Phase 2: 3-10 minutes - Competitors running and finishing
-	if elapsed >= 3*time.Minute && elapsed < 10*time.Minute {
-		progress := float64(elapsed-3*time.Minute) / float64(7*time.Minute)
+	// Phase 2: Competitors running and finishing
+	phaseRunningEnd := g.phaseStart + g.phaseRunning
+	if elapsed >= g.phaseStart && elapsed < phaseRunningEnd {
+		progress := float64(elapsed-g.phaseStart) / float64(g.phaseRunning)
 		g.updateCompetitorProgress(progress)
 	}
 
-	// Phase 3: 10-15 minutes - All finished, results stable
-	if elapsed >= 10*time.Minute && elapsed < 15*time.Minute {
+	// Phase 3: All finished, results stable
+	if elapsed >= phaseRunningEnd && elapsed < g.duration {
 		// Ensure all competitors are finished
 		g.updateCompetitorProgress(1.0)
 	}
 
-	// Reset after 15 minutes
-	if elapsed >= 15*time.Minute {
+	// Reset after full cycle
+	if elapsed >= g.duration {
 		g.resetSimulation()
 	}
 

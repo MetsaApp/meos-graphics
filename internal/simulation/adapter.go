@@ -15,13 +15,23 @@ type Adapter struct {
 	mu        sync.RWMutex
 	stopChan  chan struct{}
 	ticker    *time.Ticker
+
+	// Timing configuration
+	duration     time.Duration
+	phaseStart   time.Duration
+	phaseRunning time.Duration
+	phaseResults time.Duration
 }
 
-func NewAdapter(appState *state.State) *Adapter {
+func NewAdapter(appState *state.State, duration, phaseStart, phaseRunning, phaseResults time.Duration) *Adapter {
 	return &Adapter{
-		state:     appState,
-		generator: NewGenerator(),
-		stopChan:  make(chan struct{}),
+		state:        appState,
+		generator:    NewGenerator(duration, phaseStart, phaseRunning, phaseResults),
+		stopChan:     make(chan struct{}),
+		duration:     duration,
+		phaseStart:   phaseStart,
+		phaseRunning: phaseRunning,
+		phaseResults: phaseResults,
 	}
 }
 
@@ -109,9 +119,10 @@ func (a *Adapter) updateSimulation() {
 
 	if elapsed.Truncate(time.Minute) == elapsed {
 		phase := "start list"
-		if elapsed >= 3*time.Minute && elapsed < 10*time.Minute {
+		phaseRunningEnd := a.phaseStart + a.phaseRunning
+		if elapsed >= a.phaseStart && elapsed < phaseRunningEnd {
 			phase = "running"
-		} else if elapsed >= 10*time.Minute && elapsed < 15*time.Minute {
+		} else if elapsed >= phaseRunningEnd && elapsed < a.duration {
 			phase = "results"
 		}
 
@@ -119,7 +130,7 @@ func (a *Adapter) updateSimulation() {
 	}
 
 	// Check for reset
-	if elapsed >= 15*time.Minute {
+	if elapsed >= a.duration {
 		logger.InfoLogger.Println("Simulation cycle complete, restarting...")
 		a.generator.resetSimulation()
 	}
