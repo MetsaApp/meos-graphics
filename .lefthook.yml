@@ -48,6 +48,9 @@ pre-commit:
         # Generate swagger docs
         swag init -g cmd/meos-graphics/main.go --parseDependency --parseInternal
         
+        # Validate that generated docs match source annotations
+        ./scripts/validate-swagger.sh
+        
         # Check if docs changed
         if ! git diff --quiet docs/swagger.json docs/swagger.yaml docs/docs.go; then
           echo "Swagger documentation is out of date. The updated docs have been generated."

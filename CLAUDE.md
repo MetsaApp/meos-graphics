@@ -166,12 +166,31 @@ lsof -i :8090 | grep LISTEN | awk '{print $2}' | xargs kill
 3. **Manual Testing**: Use curl or a REST client to verify endpoints
 4. **Load Testing**: Simulation mode can handle rapid requests
 
+## Swagger Documentation
+
+### Single Source of Truth
+The Swagger/OpenAPI documentation is generated from annotations in `cmd/meos-graphics/main.go`. To ensure consistency:
+
+1. **All API metadata must be defined in main.go annotations**
+2. **Never manually edit generated files** (docs.go, swagger.json, swagger.yaml)
+3. **Validation script** at `scripts/validate-swagger.sh` ensures docs match source annotations
+4. **Pre-commit hooks** automatically check for drift between source and generated docs
+
+### Updating API Documentation
+```bash
+# Update annotations in cmd/meos-graphics/main.go, then:
+swag init -g cmd/meos-graphics/main.go --parseDependency --parseInternal
+
+# Validate consistency
+./scripts/validate-swagger.sh
+```
+
 ## Future Enhancements to Consider
 
-- WebSocket support for real-time updates
+- ~~WebSocket support for real-time updates~~ ✅ Done (SSE)
 - Configuration file support (YAML/JSON)
 - ~~Docker containerization~~ ✅ Done
 - Prometheus metrics endpoint
-- OpenAPI/Swagger documentation
+- ~~OpenAPI/Swagger documentation~~ ✅ Done
 - Database persistence option
 - Multi-event support
