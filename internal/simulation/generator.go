@@ -17,6 +17,13 @@ var (
 		"Stora Tuna OK", "OK Kåre", "Sävedalens AIK", "Göteborg-Majorna OK", "Matteus SI", "Järfälla OK", "OK Södertörn"}
 )
 
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
 type competitorTiming struct {
 	totalTime  time.Duration
 	splitTimes []time.Duration // Cumulative times for each split
@@ -121,6 +128,9 @@ func (g *Generator) generateCompetitors(baseTime time.Time) []models.Competitor 
 			firstName := firstNames[g.rnd.Intn(len(firstNames))]
 			lastName := lastNames[g.rnd.Intn(len(lastNames))]
 
+			// Set start time to beginning of running phase
+			startTime := baseTime.Add(g.phaseStart)
+			
 			competitor := models.Competitor{
 				ID:        competitorID,
 				Card:      500000 + competitorID,
@@ -128,7 +138,7 @@ func (g *Generator) generateCompetitors(baseTime time.Time) []models.Competitor 
 				Club:      g.clubs[g.rnd.Intn(len(g.clubs))],
 				Class:     class,
 				Status:    "0",      // Not started
-				StartTime: baseTime, // Everyone starts at the same time
+				StartTime: startTime, // Start at beginning of running phase
 				Splits:    []models.Split{},
 			}
 
@@ -144,17 +154,26 @@ func (g *Generator) generateCompetitors(baseTime time.Time) []models.Competitor 
 }
 
 func (g *Generator) generateCompetitorTiming(competitorID int, class models.Class) {
-	// Base time varies by class (in minutes)
+	// Calculate max time based on running phase duration
+	// Leave some buffer at the end for all to finish
+	maxMinutes := int(g.phaseRunning.Minutes() * 0.9) // Use 90% of running phase
+	
+	// Base time varies by class but must fit within running phase
 	var baseTimeMinutes int
 	switch class.Name {
 	case "Men Elite":
-		baseTimeMinutes = 45 + g.rnd.Intn(15) // 45-60 minutes
+		baseTimeMinutes = min(45 + g.rnd.Intn(15), maxMinutes) // 45-60 minutes or max
 	case "Women Elite":
-		baseTimeMinutes = 40 + g.rnd.Intn(15) // 40-55 minutes
+		baseTimeMinutes = min(40 + g.rnd.Intn(15), maxMinutes) // 40-55 minutes or max
 	case "Men Junior":
-		baseTimeMinutes = 30 + g.rnd.Intn(10) // 30-40 minutes
+		baseTimeMinutes = min(30 + g.rnd.Intn(10), maxMinutes) // 30-40 minutes or max
 	default:
-		baseTimeMinutes = 45 + g.rnd.Intn(15)
+		baseTimeMinutes = min(45 + g.rnd.Intn(15), maxMinutes)
+	}
+
+	// Ensure minimum reasonable time
+	if baseTimeMinutes < 5 {
+		baseTimeMinutes = 5
 	}
 
 	totalTime := time.Duration(baseTimeMinutes) * time.Minute
@@ -164,26 +183,36 @@ func (g *Generator) generateCompetitorTiming(competitorID int, class models.Clas
 	numRadios := len(class.RadioControls)
 
 	if numRadios > 0 {
+		// Ensure splits are evenly distributed and leave time to finish
+		// Reserve last 10% of time for final leg to finish
+		maxSplitTime := time.Duration(float64(totalTime) * 0.9)
+		
 		// Split the course into segments
 		for i := 0; i < numRadios; i++ {
-			// Each split occurs at approximately equal intervals with some variation
+			// Each split occurs at approximately equal intervals
 			baseRatio := float64(i+1) / float64(numRadios+1)
-			variation := (g.rnd.Float64() - 0.5) * 0.1 // ±5% variation
+			
+			// Add some variation but keep it reasonable
+			variation := (g.rnd.Float64() - 0.5) * 0.05 // ±2.5% variation
 			splitRatio := baseRatio + variation
-
-			// Ensure splits are in order and reasonable
-			if splitRatio < 0.1 {
-				splitRatio = 0.1
+			
+			// Calculate split time
+			splitTime := time.Duration(float64(maxSplitTime) * splitRatio)
+			
+			// Ensure minimum split time and chronological order
+			minSplitTime := time.Duration(i+1) * time.Minute // At least 1 minute per split
+			if splitTime < minSplitTime {
+				splitTime = minSplitTime
 			}
-			if splitRatio > 0.9 {
-				splitRatio = 0.9
-			}
-
-			splitTime := time.Duration(float64(totalTime) * splitRatio)
-
+			
 			// Ensure each split is after the previous one
 			if i > 0 && splitTime <= splitTimes[i-1] {
-				splitTime = splitTimes[i-1] + 30*time.Second
+				splitTime = splitTimes[i-1] + time.Minute
+			}
+			
+			// Ensure split is before finish time
+			if splitTime >= totalTime {
+				splitTime = totalTime - time.Duration(numRadios-i)*10*time.Second
 			}
 
 			splitTimes = append(splitTimes, splitTime)
@@ -227,6 +256,26 @@ func (g *Generator) UpdateSimulation(currentTime time.Time) []models.Competitor 
 	return g.competitors
 }
 
+// GetCurrentPhase returns the current simulation phase and remaining time
+func (g *Generator) GetCurrentPhase() (phase string, nextPhaseIn time.Duration) {
+	elapsed := g.simulationTime.Sub(g.startTime)
+	
+	if elapsed < g.phaseStart {
+		return "Start List", g.phaseStart - elapsed
+	}
+	
+	phaseRunningEnd := g.phaseStart + g.phaseRunning
+	if elapsed < phaseRunningEnd {
+		return "Running", phaseRunningEnd - elapsed
+	}
+	
+	if elapsed < g.duration {
+		return "Results", g.duration - elapsed
+	}
+	
+	return "Resetting", 0
+}
+
 func (g *Generator) updateCompetitorProgress(progress float64) {
 	for i := range g.competitors {
 		comp := &g.competitors[i]
@@ -242,12 +291,19 @@ func (g *Generator) updateCompetitorProgress(progress float64) {
 			continue
 		}
 
+		// Check if competitor should have started based on current time
+		if g.simulationTime.Before(comp.StartTime) {
+			// Still waiting to start
+			comp.Status = "0"
+			continue
+		}
+
 		// Determine if this competitor should have finished by now
-		// Spread finishes across the 7-minute window
+		// Spread finishes across the running phase
 		competitorProgress := float64(i) / float64(len(g.competitors))
 
-		if progress >= competitorProgress {
-			// This competitor should be running or finished
+		if progress >= competitorProgress || g.simulationTime.After(comp.StartTime) {
+			// This competitor has started
 			if comp.Status == "0" {
 				comp.Status = "2" // Running
 			}
@@ -285,16 +341,17 @@ func (g *Generator) updateCompetitorProgress(progress float64) {
 }
 
 func (g *Generator) resetSimulation() {
+	// Reset start time
+	g.startTime = time.Now()
+	
 	// Reset all competitors
 	for i := range g.competitors {
 		g.competitors[i].Status = "0"
 		g.competitors[i].FinishTime = nil
 		g.competitors[i].Splits = []models.Split{}
+		g.competitors[i].StartTime = g.startTime.Add(g.phaseStart) // Reset start time
 
 		// Regenerate timing for this competitor
 		g.generateCompetitorTiming(g.competitors[i].ID, g.competitors[i].Class)
 	}
-
-	// Reset start time
-	g.startTime = time.Now()
 }

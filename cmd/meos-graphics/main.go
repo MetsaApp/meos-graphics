@@ -124,11 +124,14 @@ func run(_ *cobra.Command, _ []string) error {
 		StartPolling() error
 		Stop() error
 	}
+	
+	var simulationAdapter *simulation.Adapter
 
 	if cmd.SimulationMode {
 		// Use simulation adapter with timing configuration
-		adapter = simulation.NewAdapter(appState, cmd.SimulationDuration,
+		simulationAdapter = simulation.NewAdapter(appState, cmd.SimulationDuration,
 			cmd.SimulationPhaseStart, cmd.SimulationPhaseRunning, cmd.SimulationPhaseResults)
+		adapter = simulationAdapter
 	} else {
 		// Configure MeOS adapter
 		config := meos.NewConfig()
@@ -195,11 +198,22 @@ func run(_ *cobra.Command, _ []string) error {
 
 	// Health check endpoint
 	router.GET("/health", func(c *gin.Context) {
-		c.JSON(200, gin.H{
+		response := gin.H{
 			"status":         "ok",
 			"meos_connected": true,
 			"sse_clients":    sseHub.GetConnectedClients(),
-		})
+		}
+		
+		// Add simulation status if in simulation mode
+		if simulationAdapter != nil {
+			phase, nextPhaseIn, _ := simulationAdapter.GetSimulationStatus()
+			response["simulation"] = gin.H{
+				"phase":        phase,
+				"nextPhaseIn":  nextPhaseIn.Seconds(),
+			}
+		}
+		
+		c.JSON(200, response)
 	})
 
 	// API endpoints (REST)
@@ -219,6 +233,22 @@ func run(_ *cobra.Command, _ []string) error {
 
 	// SSE endpoint
 	router.GET("/sse", sseHub.HandleSSE)
+	
+	// Simulation status endpoint (for web UI)
+	router.GET("/simulation/status", func(c *gin.Context) {
+		if simulationAdapter != nil {
+			phase, nextPhaseIn, _ := simulationAdapter.GetSimulationStatus()
+			c.JSON(200, gin.H{
+				"enabled":     true,
+				"phase":       phase,
+				"nextPhaseIn": nextPhaseIn.Seconds(),
+			})
+		} else {
+			c.JSON(200, gin.H{
+				"enabled": false,
+			})
+		}
+	})
 
 	// Swagger documentation
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))

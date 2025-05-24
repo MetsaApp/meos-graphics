@@ -48,6 +48,11 @@ func GetTemplates() *template.Template {
                         </div>
                     </div>
                     <div class="flex items-center space-x-4">
+                        <div id="simulation-status" class="hidden text-sm">
+                            <span class="font-medium">Simulation:</span>
+                            <span id="simulation-phase" class="text-blue-600"></span>
+                            <span class="text-gray-500">(<span id="simulation-next"></span>)</span>
+                        </div>
                         <a href="/docs" class="text-sm text-blue-600 hover:text-blue-800">API Documentation</a>
                         <span id="connection-status" class="text-sm text-gray-500">
                             <span class="inline-block h-2 w-2 rounded-full bg-gray-400"></span>
@@ -94,6 +99,30 @@ func GetTemplates() *template.Template {
             evtSource.addEventListener('heartbeat', function(e) {
                 console.log('Heartbeat:', e.data);
             });
+            
+            // Update simulation status
+            function updateSimulationStatus() {
+                fetch('/simulation/status')
+                    .then(res => res.json())
+                    .then(data => {
+                        const statusDiv = document.getElementById('simulation-status');
+                        if (data.enabled) {
+                            statusDiv.classList.remove('hidden');
+                            document.getElementById('simulation-phase').textContent = data.phase;
+                            const mins = Math.floor(data.nextPhaseIn / 60);
+                            const secs = Math.floor(data.nextPhaseIn % 60);
+                            document.getElementById('simulation-next').textContent = 
+                                mins > 0 ? mins + 'm ' + secs + 's' : secs + 's';
+                        } else {
+                            statusDiv.classList.add('hidden');
+                        }
+                    })
+                    .catch(err => console.error('Failed to fetch simulation status:', err));
+            }
+            
+            // Update simulation status every second
+            updateSimulationStatus();
+            setInterval(updateSimulationStatus, 1000);
         });
     </script>
 </body>
