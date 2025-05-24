@@ -118,10 +118,11 @@ func TestGenerator_GenerateInitialData(t *testing.T) {
 		t.Errorf("Number of competitors = %d, want between 45 and 75", len(competitors))
 	}
 
-	// Verify all competitors start at base time
+	// Verify all competitors start at base time + phase start
+	expectedStartTime := baseTime.Add(g.phaseStart)
 	for i, comp := range competitors {
-		if !comp.StartTime.Equal(baseTime) {
-			t.Errorf("Competitor[%d] start time = %v, want %v", i, comp.StartTime, baseTime)
+		if !comp.StartTime.Equal(expectedStartTime) {
+			t.Errorf("Competitor[%d] start time = %v, want %v", i, comp.StartTime, expectedStartTime)
 		}
 		if comp.Status != "0" {
 			t.Errorf("Competitor[%d] status = %q, want %q", i, comp.Status, "0")
@@ -230,7 +231,7 @@ func TestGenerator_PhaseTransitions(t *testing.T) {
 				for _, comp := range competitors {
 					switch comp.Status {
 					case "0": // Still not started - OK for later competitors
-					case "9": // Running
+					case "2": // Running
 						runningCount++
 					case "1": // Finished
 						finishedCount++
@@ -261,8 +262,19 @@ func TestGenerator_PhaseTransitions(t *testing.T) {
 						}
 					}
 				}
+				// At 8 minutes (5 minutes into running phase), some might still be running
+				// since competitors can take up to 6.3 minutes to finish
 				if finishedCount == 0 {
-					return fmt.Errorf("no finished competitors in late phase 2")
+					// Check if at least some are running with splits
+					runningWithSplits := 0
+					for _, comp := range competitors {
+						if comp.Status == "2" && len(comp.Splits) > 0 {
+							runningWithSplits++
+						}
+					}
+					if runningWithSplits == 0 {
+						return fmt.Errorf("expected some progress (finished or running with splits) in late phase 2")
+					}
 				}
 				return nil
 			},
@@ -383,10 +395,11 @@ func TestGenerator_TimeCalculations(t *testing.T) {
 			}
 		}
 
-		// Verify total time is reasonable (should be 35-65 minutes based on generator logic)
+		// Verify total time is reasonable (should be within phase running duration)
 		totalTime := comp.FinishTime.Sub(comp.StartTime)
-		if totalTime < 30*time.Minute || totalTime > 70*time.Minute {
-			t.Errorf("Competitor[%d] total time %v is unrealistic", i, totalTime)
+		maxTime := time.Duration(float64(g.phaseRunning) * 0.9) // 90% of phase running
+		if totalTime < 5*time.Minute || totalTime > maxTime {
+			t.Errorf("Competitor[%d] total time %v is unrealistic (expected 5min - %v)", i, totalTime, maxTime)
 		}
 	}
 }
@@ -418,7 +431,7 @@ func TestGenerator_CompetitorProgression(t *testing.T) {
 
 		for _, comp := range competitors {
 			switch comp.Status {
-			case "9":
+			case "2":
 				runningCount++
 			case "1":
 				finishedCount++

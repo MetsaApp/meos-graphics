@@ -17,7 +17,7 @@ var (
 		"Stora Tuna OK", "OK Kåre", "Sävedalens AIK", "Göteborg-Majorna OK", "Matteus SI", "Järfälla OK", "OK Södertörn"}
 )
 
-func min(a, b int) int {
+func minInt(a, b int) int {
 	if a < b {
 		return a
 	}
@@ -130,14 +130,14 @@ func (g *Generator) generateCompetitors(baseTime time.Time) []models.Competitor 
 
 			// Set start time to beginning of running phase
 			startTime := baseTime.Add(g.phaseStart)
-			
+
 			competitor := models.Competitor{
 				ID:        competitorID,
 				Card:      500000 + competitorID,
 				Name:      fmt.Sprintf("%s %s", firstName, lastName),
 				Club:      g.clubs[g.rnd.Intn(len(g.clubs))],
 				Class:     class,
-				Status:    "0",      // Not started
+				Status:    "0",       // Not started
 				StartTime: startTime, // Start at beginning of running phase
 				Splits:    []models.Split{},
 			}
@@ -157,18 +157,18 @@ func (g *Generator) generateCompetitorTiming(competitorID int, class models.Clas
 	// Calculate max time based on running phase duration
 	// Leave some buffer at the end for all to finish
 	maxMinutes := int(g.phaseRunning.Minutes() * 0.9) // Use 90% of running phase
-	
+
 	// Base time varies by class but must fit within running phase
 	var baseTimeMinutes int
 	switch class.Name {
 	case "Men Elite":
-		baseTimeMinutes = min(45 + g.rnd.Intn(15), maxMinutes) // 45-60 minutes or max
+		baseTimeMinutes = minInt(45+g.rnd.Intn(15), maxMinutes) // 45-60 minutes or max
 	case "Women Elite":
-		baseTimeMinutes = min(40 + g.rnd.Intn(15), maxMinutes) // 40-55 minutes or max
+		baseTimeMinutes = minInt(40+g.rnd.Intn(15), maxMinutes) // 40-55 minutes or max
 	case "Men Junior":
-		baseTimeMinutes = min(30 + g.rnd.Intn(10), maxMinutes) // 30-40 minutes or max
+		baseTimeMinutes = minInt(30+g.rnd.Intn(10), maxMinutes) // 30-40 minutes or max
 	default:
-		baseTimeMinutes = min(45 + g.rnd.Intn(15), maxMinutes)
+		baseTimeMinutes = minInt(45+g.rnd.Intn(15), maxMinutes)
 	}
 
 	// Ensure minimum reasonable time
@@ -186,30 +186,30 @@ func (g *Generator) generateCompetitorTiming(competitorID int, class models.Clas
 		// Ensure splits are evenly distributed and leave time to finish
 		// Reserve last 10% of time for final leg to finish
 		maxSplitTime := time.Duration(float64(totalTime) * 0.9)
-		
+
 		// Split the course into segments
 		for i := 0; i < numRadios; i++ {
 			// Each split occurs at approximately equal intervals
 			baseRatio := float64(i+1) / float64(numRadios+1)
-			
+
 			// Add some variation but keep it reasonable
 			variation := (g.rnd.Float64() - 0.5) * 0.05 // ±2.5% variation
 			splitRatio := baseRatio + variation
-			
+
 			// Calculate split time
 			splitTime := time.Duration(float64(maxSplitTime) * splitRatio)
-			
+
 			// Ensure minimum split time and chronological order
 			minSplitTime := time.Duration(i+1) * time.Minute // At least 1 minute per split
 			if splitTime < minSplitTime {
 				splitTime = minSplitTime
 			}
-			
+
 			// Ensure each split is after the previous one
 			if i > 0 && splitTime <= splitTimes[i-1] {
 				splitTime = splitTimes[i-1] + time.Minute
 			}
-			
+
 			// Ensure split is before finish time
 			if splitTime >= totalTime {
 				splitTime = totalTime - time.Duration(numRadios-i)*10*time.Second
@@ -259,20 +259,20 @@ func (g *Generator) UpdateSimulation(currentTime time.Time) []models.Competitor 
 // GetCurrentPhase returns the current simulation phase and remaining time
 func (g *Generator) GetCurrentPhase() (phase string, nextPhaseIn time.Duration) {
 	elapsed := g.simulationTime.Sub(g.startTime)
-	
+
 	if elapsed < g.phaseStart {
 		return "Start List", g.phaseStart - elapsed
 	}
-	
+
 	phaseRunningEnd := g.phaseStart + g.phaseRunning
 	if elapsed < phaseRunningEnd {
 		return "Running", phaseRunningEnd - elapsed
 	}
-	
+
 	if elapsed < g.duration {
 		return "Results", g.duration - elapsed
 	}
-	
+
 	return "Resetting", 0
 }
 
@@ -343,7 +343,7 @@ func (g *Generator) updateCompetitorProgress(progress float64) {
 func (g *Generator) resetSimulation() {
 	// Reset start time
 	g.startTime = time.Now()
-	
+
 	// Reset all competitors
 	for i := range g.competitors {
 		g.competitors[i].Status = "0"

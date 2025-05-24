@@ -194,3 +194,9 @@ swag init -g cmd/meos-graphics/main.go --parseDependency --parseInternal
 - ~~OpenAPI/Swagger documentation~~ ✅ Done
 - Database persistence option
 - Multi-event support
+
+## Important Instructions
+
+- NEVER add the Claude Code byline to pull requests or commits
+- This includes removing "🤖 Generated with [Claude Code](https://claude.ai/code)" or "Co-Authored-By: Claude <noreply@anthropic.com>"
+- Keep commit messages clean and professional without AI attribution

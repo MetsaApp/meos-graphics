@@ -124,10 +124,10 @@ func (s *State) notifyUpdate() {
 // UpdateFromMeOS updates the state with new data from MeOS and notifies listeners only if data changed
 func (s *State) UpdateFromMeOS(event *models.Event, controls []models.Control, classes []models.Class, clubs []models.Club, competitors []models.Competitor) {
 	s.mu.Lock()
-	
+
 	// Check if data has actually changed
 	hasChanges := false
-	
+
 	// Simple change detection - could be optimized further
 	if !hasChanges && (s.Event == nil && event != nil || s.Event != nil && event == nil) {
 		hasChanges = true
@@ -144,7 +144,7 @@ func (s *State) UpdateFromMeOS(event *models.Event, controls []models.Control, c
 	if !hasChanges && len(s.Competitors) != len(competitors) {
 		hasChanges = true
 	}
-	
+
 	// For competitors, check if any have different status or finish times
 	if !hasChanges && len(s.Competitors) == len(competitors) {
 		for i := range competitors {
@@ -166,14 +166,14 @@ func (s *State) UpdateFromMeOS(event *models.Event, controls []models.Control, c
 			}
 		}
 	}
-	
+
 	// Update the state
 	s.Event = event
 	s.Controls = controls
 	s.Classes = classes
 	s.Clubs = clubs
 	s.Competitors = competitors
-	
+
 	s.mu.Unlock()
 
 	// Only notify if there were changes

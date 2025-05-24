@@ -227,7 +227,7 @@ func TestHandler_GetResults(t *testing.T) {
 	comp3.Status = "3" // DNF
 
 	comp4 := testhelpers.CreateTestCompetitor(4, "Sarah Wilson", club2, class)
-	comp4.Status = "0" // DNS
+	comp4.Status = "5" // DNS
 
 	comp5 := testhelpers.CreateTestCompetitor(5, "Tom Brown", club1, class)
 	comp5.Status = "4" // MP (Mispunch)

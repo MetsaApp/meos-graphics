@@ -144,11 +144,11 @@ func (a *Adapter) updateSimulation() {
 func (a *Adapter) GetSimulationStatus() (phase string, nextPhaseIn time.Duration, isSimulation bool) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
-	
+
 	if !a.connected {
 		return "", 0, false
 	}
-	
+
 	phase, nextPhaseIn = a.generator.GetCurrentPhase()
 	return phase, nextPhaseIn, true
 }

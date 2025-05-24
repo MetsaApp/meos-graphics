@@ -124,7 +124,7 @@ func run(_ *cobra.Command, _ []string) error {
 		StartPolling() error
 		Stop() error
 	}
-	
+
 	var simulationAdapter *simulation.Adapter
 
 	if cmd.SimulationMode {
@@ -203,16 +203,16 @@ func run(_ *cobra.Command, _ []string) error {
 			"meos_connected": true,
 			"sse_clients":    sseHub.GetConnectedClients(),
 		}
-		
+
 		// Add simulation status if in simulation mode
 		if simulationAdapter != nil {
 			phase, nextPhaseIn, _ := simulationAdapter.GetSimulationStatus()
 			response["simulation"] = gin.H{
-				"phase":        phase,
-				"nextPhaseIn":  nextPhaseIn.Seconds(),
+				"phase":       phase,
+				"nextPhaseIn": nextPhaseIn.Seconds(),
 			}
 		}
-		
+
 		c.JSON(200, response)
 	})
 
@@ -233,7 +233,7 @@ func run(_ *cobra.Command, _ []string) error {
 
 	// SSE endpoint
 	router.GET("/sse", sseHub.HandleSSE)
-	
+
 	// Simulation status endpoint (for web UI)
 	router.GET("/simulation/status", func(c *gin.Context) {
 		if simulationAdapter != nil {

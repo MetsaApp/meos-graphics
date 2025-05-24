@@ -103,7 +103,7 @@ func TestConfigurableTiming(t *testing.T) {
 				competitors := adapter.generator.UpdateSimulation(currentTime)
 
 				// Count statuses
-				statusCounts := map[string]int{"0": 0, "9": 0, "1": 0}
+				statusCounts := map[string]int{"0": 0, "2": 0, "1": 0}
 				for _, comp := range competitors {
 					statusCounts[comp.Status]++
 				}
@@ -112,13 +112,13 @@ func TestConfigurableTiming(t *testing.T) {
 				switch tp.expectedPhase {
 				case "start":
 					// All should be not started
-					if statusCounts["9"] > 0 || statusCounts["1"] > 0 {
+					if statusCounts["2"] > 0 || statusCounts["1"] > 0 {
 						t.Errorf("%s at %v: Expected all not started, got %d running, %d finished",
-							tt.name, tp.elapsed, statusCounts["9"], statusCounts["1"])
+							tt.name, tp.elapsed, statusCounts["2"], statusCounts["1"])
 					}
 				case "running":
 					// Some should be running or finished
-					if statusCounts["9"]+statusCounts["1"] == 0 {
+					if statusCounts["2"]+statusCounts["1"] == 0 {
 						t.Errorf("%s at %v: Expected some progress, all still not started",
 							tt.name, tp.elapsed)
 					}
@@ -132,7 +132,7 @@ func TestConfigurableTiming(t *testing.T) {
 					// All should be back to not started
 					if statusCounts["0"] != len(competitors) {
 						t.Errorf("%s at %v: Expected all reset, got %d not started, %d running, %d finished",
-							tt.name, tp.elapsed, statusCounts["0"], statusCounts["9"], statusCounts["1"])
+							tt.name, tp.elapsed, statusCounts["0"], statusCounts["2"], statusCounts["1"])
 					}
 				}
 			}
@@ -237,7 +237,7 @@ func TestPhaseLogging(t *testing.T) {
 			switch comp.Status {
 			case "0":
 				notStarted++
-			case "9":
+			case "2":
 				running++
 			case "1":
 				finished++
