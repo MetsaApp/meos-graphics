@@ -233,6 +233,11 @@ func run(_ *cobra.Command, _ []string) error {
 		c.Redirect(http.StatusMovedPermanently, "/web")
 	})
 
+	// Serve empty favicon to avoid 404 errors
+	router.GET("/favicon.ico", func(c *gin.Context) {
+		c.Data(http.StatusOK, "image/x-icon", []byte{})
+	})
+
 	// Handle graceful shutdown
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)

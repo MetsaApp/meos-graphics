@@ -36,7 +36,6 @@ func GetTemplates() *template.Template {
     <title>{{.Title}} - MeOS Graphics</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
-    <script src="https://unpkg.com/htmx.org/dist/ext/sse.js"></script>
 </head>
 <body class="h-full bg-gray-50">
     <div class="min-h-full">
@@ -62,22 +61,38 @@ func GetTemplates() *template.Template {
         </main>
     </div>
     
-    <div hx-ext="sse" sse-connect="/sse" sse-swap="none">
-        <div sse-swap="connected" hx-on:htmx:sse-message="
-            document.getElementById('connection-status').innerHTML = 
-                '<span class=\'inline-block h-2 w-2 rounded-full bg-green-400\'></span> Connected';
-        "></div>
-        <div sse-swap="update" hx-on:htmx:sse-message="
-            // Trigger HTMX refresh on update events
-            htmx.trigger(document.body, 'refresh-data');
-        "></div>
-    </div>
-    
     <script>
-        // Handle SSE disconnection
-        document.addEventListener('htmx:sseError', function(evt) {
-            document.getElementById('connection-status').innerHTML = 
-                '<span class="inline-block h-2 w-2 rounded-full bg-red-400"></span> Disconnected';
+        // Initialize SSE connection
+        document.addEventListener('DOMContentLoaded', function() {
+            const evtSource = new EventSource('/sse');
+            
+            evtSource.onopen = function() {
+                console.log('SSE connection opened');
+                document.getElementById('connection-status').innerHTML = 
+                    '<span class="inline-block h-2 w-2 rounded-full bg-green-400"></span> Connected';
+            };
+            
+            evtSource.onerror = function(err) {
+                console.error('SSE error:', err);
+                document.getElementById('connection-status').innerHTML = 
+                    '<span class="inline-block h-2 w-2 rounded-full bg-red-400"></span> Disconnected';
+            };
+            
+            evtSource.addEventListener('connected', function(e) {
+                console.log('Connected event:', e.data);
+                document.getElementById('connection-status').innerHTML = 
+                    '<span class="inline-block h-2 w-2 rounded-full bg-green-400"></span> Connected';
+            });
+            
+            evtSource.addEventListener('update', function(e) {
+                console.log('Update event:', e.data);
+                // Trigger HTMX refresh on all elements with refresh-data trigger
+                htmx.trigger(document.body, 'refresh-data');
+            });
+            
+            evtSource.addEventListener('heartbeat', function(e) {
+                console.log('Heartbeat:', e.data);
+            });
         });
     </script>
 </body>
@@ -92,6 +107,7 @@ func GetTemplates() *template.Template {
 {{end}}
 
 {{define "content"}}
+{{if eq .Title "MeOS Graphics"}}
 <div class="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
     <div class="px-4 py-6 sm:px-0">
         <h2 class="text-2xl font-bold mb-6">Competition Classes</h2>
@@ -113,16 +129,7 @@ func GetTemplates() *template.Template {
         {{end}}
     </div>
 </div>
-{{end}}
-`))
-
-	// Class page
-	tmpl = template.Must(tmpl.Parse(`
-{{define "class"}}
-{{template "layout" .}}
-{{end}}
-
-{{define "content"}}
+{{else if .ClassName}}
 <div class="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
     <div class="px-4 py-6 sm:px-0">
         <div class="mb-6">
@@ -200,6 +207,24 @@ function showTab(tabName) {
     htmx.trigger('#content-' + tabName, 'revealed');
 }
 </script>
+{{else if .Error}}
+<div class="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
+    <div class="px-4 py-6 sm:px-0">
+        <div class="text-center">
+            <h2 class="text-2xl font-bold text-red-600 mb-4">Error</h2>
+            <p class="text-gray-600">{{.Error}}</p>
+            <a href="/web" class="mt-4 inline-block text-blue-600 hover:text-blue-800">← Back to Home</a>
+        </div>
+    </div>
+</div>
+{{end}}
+{{end}}
+`))
+
+	// Class page
+	tmpl = template.Must(tmpl.Parse(`
+{{define "class"}}
+{{template "layout" .}}
 {{end}}
 `))
 
@@ -333,18 +358,6 @@ function showTab(tabName) {
 	tmpl = template.Must(tmpl.Parse(`
 {{define "error"}}
 {{template "layout" .}}
-{{end}}
-
-{{define "content"}}
-<div class="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
-    <div class="px-4 py-6 sm:px-0">
-        <div class="text-center">
-            <h2 class="text-2xl font-bold text-red-600 mb-4">Error</h2>
-            <p class="text-gray-600">{{.Error}}</p>
-            <a href="/web" class="mt-4 inline-block text-blue-600 hover:text-blue-800">← Back to Home</a>
-        </div>
-    </div>
-</div>
 {{end}}
 
 {{define "error-partial"}}
