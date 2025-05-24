@@ -279,7 +279,7 @@ function showTab(tabName) {
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
             {{range .Results}}
-            <tr class="{{if eq .Status "DNF"}}bg-red-50{{else if eq .Status "DNS"}}bg-gray-50{{else if eq .Status "MP"}}bg-yellow-50{{else if eq .Status "Running"}}bg-blue-50{{end}}">
+            <tr class="{{if eq .Status "DNF"}}bg-red-50{{else if eq .Status "DNS"}}bg-gray-50{{else if eq .Status "MP"}}bg-yellow-50{{else if eq .Status "Running"}}bg-blue-50{{else if eq .Status "Waiting"}}bg-gray-50{{end}}">
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {{if .Position}}{{.Position}}{{else}}-{{end}}
                 </td>
@@ -293,7 +293,7 @@ function showTab(tabName) {
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm">
                     <span class="inline-flex rounded-full px-2 text-xs font-semibold leading-5
-                        {{if eq .Status "OK"}}bg-green-100 text-green-800{{else if eq .Status "DNF"}}bg-red-100 text-red-800{{else if eq .Status "DNS"}}bg-gray-100 text-gray-800{{else if eq .Status "MP"}}bg-yellow-100 text-yellow-800{{else if eq .Status "Running"}}bg-blue-100 text-blue-800{{end}}">
+                        {{if eq .Status "OK"}}bg-green-100 text-green-800{{else if eq .Status "DNF"}}bg-red-100 text-red-800{{else if eq .Status "DNS"}}bg-gray-100 text-gray-800{{else if eq .Status "MP"}}bg-yellow-100 text-yellow-800{{else if eq .Status "Running"}}bg-blue-100 text-blue-800{{else if eq .Status "Waiting"}}bg-gray-100 text-gray-800{{end}}">
                         {{.Status}}
                     </span>
                 </td>
@@ -315,6 +315,7 @@ function showTab(tabName) {
 {{define "splits-partial"}}
 <div class="space-y-6">
     {{range .Splits.Splits}}
+    {{if .Standings}}
     <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
         <div class="bg-gray-50 px-6 py-3">
             <h3 class="text-sm font-medium text-gray-900">{{.ControlName}}</h3>
@@ -347,6 +348,12 @@ function showTab(tabName) {
                 {{end}}
             </tbody>
         </table>
+    </div>
+    {{end}}
+    {{end}}
+    {{if not .Splits.Splits}}
+    <div class="text-center py-12">
+        <p class="text-gray-500">No split times available</p>
     </div>
     {{end}}
 </div>

@@ -137,6 +137,7 @@ func (s *Service) GetResults(classID int) ([]ResultEntry, error) {
 	var dnfCompetitors []models.Competitor
 	var dnsCompetitors []models.Competitor
 	var runningCompetitors []models.Competitor
+	var waitingCompetitors []models.Competitor
 
 	// Categorize competitors
 	for _, comp := range competitors {
@@ -147,10 +148,12 @@ func (s *Service) GetResults(classID int) ([]ResultEntry, error) {
 			}
 		case "3", "4": // DNF or MP (MisPunch)
 			dnfCompetitors = append(dnfCompetitors, comp)
-		case "0": // DNS/Not started
-			dnsCompetitors = append(dnsCompetitors, comp)
+		case "0": // Not yet started
+			waitingCompetitors = append(waitingCompetitors, comp)
 		case "2": // Running
 			runningCompetitors = append(runningCompetitors, comp)
+		case "5": // DNS (Did Not Start - set by organizers)
+			dnsCompetitors = append(dnsCompetitors, comp)
 		default:
 			// Other status - skip
 		}
@@ -255,7 +258,17 @@ func (s *Service) GetResults(classID int) ([]ResultEntry, error) {
 		})
 	}
 
-	// Add DNS competitors
+	// Add waiting competitors (not yet started)
+	for _, comp := range waitingCompetitors {
+		results = append(results, ResultEntry{
+			Name:      comp.Name,
+			Club:      comp.Club.Name,
+			StartTime: comp.StartTime,
+			Status:    "Waiting",
+		})
+	}
+
+	// Add DNS competitors (Did Not Start - set by organizers)
 	for _, comp := range dnsCompetitors {
 		results = append(results, ResultEntry{
 			Name:      comp.Name,
