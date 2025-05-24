@@ -224,7 +224,7 @@ func (a *Adapter) processData(data []byte) (bool, error) {
 	updatedControls := updateEntities(currentControls, newControls, isMOPComplete)
 	updatedClubs := updateEntities(currentClubs, newClubs, isMOPComplete)
 	updatedClasses := updateEntities(currentClasses, newClasses, isMOPComplete)
-	updatedCompetitors := updateEntities(currentCompetitors, newCompetitors, isMOPComplete)
+	updatedCompetitors := updateCompetitors(currentCompetitors, newCompetitors, isMOPComplete)
 
 	// Resolve radio controls for classes
 	for i := range updatedClasses {
@@ -284,6 +284,35 @@ func updateEntities[T models.Entity](current, updates []T, isComplete bool) []T 
 		found := false
 		for i, existing := range result {
 			if existing.GetID() == update.GetID() {
+				result[i] = update
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			result = append(result, update)
+		}
+	}
+
+	return result
+}
+
+func updateCompetitors(current, updates []models.Competitor, isComplete bool) []models.Competitor {
+	if isComplete {
+		return append([]models.Competitor{}, updates...)
+	}
+
+	result := append([]models.Competitor{}, current...)
+
+	for _, update := range updates {
+		found := false
+		for i, existing := range result {
+			if existing.GetID() == update.GetID() {
+				// Preserve Card field if update has 0 (not provided in diff)
+				if update.Card == 0 && existing.Card != 0 {
+					update.Card = existing.Card
+				}
 				result[i] = update
 				found = true
 				break

@@ -100,6 +100,9 @@ func (c *MOPCompetitor) RunningTime() int {
 }
 
 func parseInt(s string) int {
+	if s == "" {
+		return 0
+	}
 	var i int
 	// Ignore error - returns 0 on parse failure which is acceptable for our use case
 	_, _ = fmt.Sscanf(s, "%d", &i)

@@ -47,7 +47,8 @@ func GetTemplates() *template.Template {
                             <h1 class="text-xl font-bold">MeOS Graphics</h1>
                         </div>
                     </div>
-                    <div class="flex items-center">
+                    <div class="flex items-center space-x-4">
+                        <a href="/docs" class="text-sm text-blue-600 hover:text-blue-800">API Documentation</a>
                         <span id="connection-status" class="text-sm text-gray-500">
                             <span class="inline-block h-2 w-2 rounded-full bg-gray-400"></span>
                             Disconnected
@@ -249,7 +250,7 @@ function showTab(tabName) {
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{.Name}}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{.Club}}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{formatTime .StartTime}}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{.Card}}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{if .Card}}{{.Card}}{{else}}-{{end}}</td>
             </tr>
             {{end}}
         </tbody>
