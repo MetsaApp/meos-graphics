@@ -1,0 +1,42 @@
+# Lefthook configuration for MeOS Graphics
+# Runs checks before git commits to catch issues early
+
+pre-commit:
+  parallel: true
+  commands:
+    build:
+      run: go build -v ./...
+      tags: build compile
+      skip:
+        - merge
+        - rebase
+    
+    test:
+      run: go test -v ./...
+      tags: test unit
+      skip:
+        - merge
+        - rebase
+    
+    lint:
+      run: golangci-lint run --timeout=5m
+      tags: lint style
+      skip:
+        - merge
+        - rebase
+    
+    docs-check:
+      run: |
+        go run ./cmd/generate-docs
+        if ! git diff --quiet docs/CLI_FLAGS.md; then
+          echo "Documentation is out of date. The updated docs have been generated."
+          echo "Please add the changes to your commit."
+          exit 1
+        fi
+      tags: docs documentation
+      skip:
+        - merge
+        - rebase
+
+# Optional: run specific checks with tags
+# lefthook run pre-commit --tags=build,test

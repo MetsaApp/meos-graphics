@@ -35,3 +35,7 @@ logs/
 # Build output
 /meos-graphics
 dist/bin/
+
+# Lefthook
+.lefthook/
+lefthook.log
