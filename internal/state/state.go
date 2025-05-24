@@ -121,15 +121,63 @@ func (s *State) notifyUpdate() {
 	}
 }
 
-// UpdateFromMeOS updates the state with new data from MeOS and notifies listeners
+// UpdateFromMeOS updates the state with new data from MeOS and notifies listeners only if data changed
 func (s *State) UpdateFromMeOS(event *models.Event, controls []models.Control, classes []models.Class, clubs []models.Club, competitors []models.Competitor) {
 	s.mu.Lock()
+	
+	// Check if data has actually changed
+	hasChanges := false
+	
+	// Simple change detection - could be optimized further
+	if !hasChanges && (s.Event == nil && event != nil || s.Event != nil && event == nil) {
+		hasChanges = true
+	}
+	if !hasChanges && len(s.Controls) != len(controls) {
+		hasChanges = true
+	}
+	if !hasChanges && len(s.Classes) != len(classes) {
+		hasChanges = true
+	}
+	if !hasChanges && len(s.Clubs) != len(clubs) {
+		hasChanges = true
+	}
+	if !hasChanges && len(s.Competitors) != len(competitors) {
+		hasChanges = true
+	}
+	
+	// For competitors, check if any have different status or finish times
+	if !hasChanges && len(s.Competitors) == len(competitors) {
+		for i := range competitors {
+			if i >= len(s.Competitors) {
+				hasChanges = true
+				break
+			}
+			if s.Competitors[i].Status != competitors[i].Status {
+				hasChanges = true
+				break
+			}
+			if (s.Competitors[i].FinishTime == nil) != (competitors[i].FinishTime == nil) {
+				hasChanges = true
+				break
+			}
+			if len(s.Competitors[i].Splits) != len(competitors[i].Splits) {
+				hasChanges = true
+				break
+			}
+		}
+	}
+	
+	// Update the state
 	s.Event = event
 	s.Controls = controls
 	s.Classes = classes
 	s.Clubs = clubs
 	s.Competitors = competitors
+	
 	s.mu.Unlock()
 
-	s.notifyUpdate()
+	// Only notify if there were changes
+	if hasChanges {
+		s.notifyUpdate()
+	}
 }
