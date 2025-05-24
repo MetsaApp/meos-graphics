@@ -185,16 +185,6 @@ swag init -g cmd/meos-graphics/main.go --parseDependency --parseInternal
 ./scripts/validate-swagger.sh
 ```
 
-## Future Enhancements to Consider
-
-- ~~WebSocket support for real-time updates~~ ✅ Done (SSE)
-- Configuration file support (YAML/JSON)
-- ~~Docker containerization~~ ✅ Done
-- Prometheus metrics endpoint
-- ~~OpenAPI/Swagger documentation~~ ✅ Done
-- Database persistence option
-- Multi-event support
-
 ## Important Instructions
 
 - NEVER add the Claude Code byline to pull requests or commits
