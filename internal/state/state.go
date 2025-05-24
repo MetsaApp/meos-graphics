@@ -164,6 +164,20 @@ func (s *State) UpdateFromMeOS(event *models.Event, controls []models.Control, c
 				hasChanges = true
 				break
 			}
+			// Also check if split times have changed
+			for j := range competitors[i].Splits {
+				if j >= len(s.Competitors[i].Splits) {
+					hasChanges = true
+					break
+				}
+				if s.Competitors[i].Splits[j].PassingTime != competitors[i].Splits[j].PassingTime {
+					hasChanges = true
+					break
+				}
+			}
+			if hasChanges {
+				break
+			}
 		}
 	}
 

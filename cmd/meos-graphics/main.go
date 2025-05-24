@@ -111,8 +111,9 @@ func run(_ *cobra.Command, _ []string) error {
 				phaseSum, cmd.SimulationDuration)
 		}
 
-		logger.InfoLogger.Printf("Simulation timing: Total=%s, Start=%s, Running=%s, Results=%s",
-			cmd.SimulationDuration, cmd.SimulationPhaseStart, cmd.SimulationPhaseRunning, cmd.SimulationPhaseResults)
+		logger.InfoLogger.Printf("Simulation timing: Total=%s, Start=%s, Running=%s, Results=%s, MassStart=%v",
+			cmd.SimulationDuration, cmd.SimulationPhaseStart, cmd.SimulationPhaseRunning, cmd.SimulationPhaseResults,
+			cmd.SimulationMassStart)
 	}
 
 	// Initialize global state
@@ -130,7 +131,8 @@ func run(_ *cobra.Command, _ []string) error {
 	if cmd.SimulationMode {
 		// Use simulation adapter with timing configuration
 		simulationAdapter = simulation.NewAdapter(appState, cmd.SimulationDuration,
-			cmd.SimulationPhaseStart, cmd.SimulationPhaseRunning, cmd.SimulationPhaseResults)
+			cmd.SimulationPhaseStart, cmd.SimulationPhaseRunning, cmd.SimulationPhaseResults,
+			cmd.SimulationMassStart)
 		adapter = simulationAdapter
 	} else {
 		// Configure MeOS adapter
@@ -236,6 +238,8 @@ func run(_ *cobra.Command, _ []string) error {
 
 	// Simulation status endpoint (for web UI)
 	router.GET("/simulation/status", func(c *gin.Context) {
+		// Always return 200 since the web UI polls this endpoint
+		// but only include simulation data when in simulation mode
 		if simulationAdapter != nil {
 			phase, nextPhaseIn, _ := simulationAdapter.GetSimulationStatus()
 			c.JSON(200, gin.H{
