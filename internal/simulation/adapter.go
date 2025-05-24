@@ -109,10 +109,14 @@ func (a *Adapter) updateSimulation() {
 	// Get updated competitors
 	competitors := a.generator.UpdateSimulation(currentTime)
 
-	// Update state
-	a.state.Lock()
-	a.state.Competitors = competitors
-	a.state.Unlock()
+	// Get current state
+	event := a.state.GetEvent()
+	controls := a.state.GetControls()
+	classes := a.state.GetClasses()
+	clubs := a.state.GetClubs()
+
+	// Update state atomically and notify listeners
+	a.state.UpdateFromMeOS(event, controls, classes, clubs, competitors)
 
 	// Log phase changes
 	elapsed := currentTime.Sub(a.generator.startTime)

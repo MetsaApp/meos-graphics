@@ -36,6 +36,33 @@ meos-graphics/
 - REST API endpoints for competition graphics
 - Logging to both console and file
 
+## Web Interface
+
+The application includes a built-in web interface for viewing competition data:
+
+- **URL**: `http://localhost:8090/` (redirects to `/web`)
+- **Features**:
+  - Real-time updates via Server-Sent Events (SSE)
+  - Responsive design with TailwindCSS
+  - Interactive navigation between classes
+  - Live connection status indicator
+  - No JavaScript framework required (uses HTMX)
+
+### Web Routes
+
+- `/web` - Main page listing all classes
+- `/web/classes/:classId` - View specific class with tabs for:
+  - Start List
+  - Results
+  - Split Times
+
+## API Documentation
+
+Interactive API documentation is available via Swagger UI:
+
+- **URL**: `http://localhost:8090/docs`
+- **OpenAPI Spec**: `http://localhost:8090/swagger/swagger.json`
+
 ## API Endpoints
 
 - `GET /health` - Health check endpoint
@@ -43,6 +70,7 @@ meos-graphics/
 - `GET /classes/:classId/startlist` - Get start list for a class
 - `GET /classes/:classId/results` - Get results with positions and radio times
 - `GET /classes/:classId/splits` - Get split time standings at each control
+- `GET /sse` - Server-Sent Events endpoint for real-time updates
 
 ## Configuration
 
@@ -272,13 +300,43 @@ lefthook run pre-commit
 lefthook run pre-commit --tags=build,test
 ```
 
-### Updating CLI Documentation
+### Updating Documentation
 
-The CLI documentation in `docs/CLI_FLAGS.md` is automatically generated from the code. To update it:
+This project has two types of automatically generated documentation that must be kept up-to-date:
+
+#### CLI Documentation
+
+The CLI documentation in `docs/CLI_FLAGS.md` is automatically generated from the code:
 
 ```bash
-# Generate documentation
+# Generate CLI documentation
 go run ./cmd/generate-docs
 ```
 
-The CI pipeline and pre-commit hooks validate that the documentation is up-to-date. If you add or modify command-line flags, you must regenerate the documentation and commit the changes.
+#### API Documentation (Swagger/OpenAPI)
+
+The API documentation is generated using Swagger annotations in the code:
+
+```bash
+# Install swag tool (one-time setup)
+go install github.com/swaggo/swag/cmd/swag@latest
+
+# Generate Swagger documentation
+swag init -g cmd/meos-graphics/main.go --parseDependency --parseInternal
+```
+
+The generated files are:
+- `docs/docs.go` - Go code for embedding docs
+- `docs/swagger.json` - OpenAPI specification in JSON
+- `docs/swagger.yaml` - OpenAPI specification in YAML
+
+**Important**: The CI pipeline and pre-commit hooks validate that all documentation is up-to-date. If you:
+- Add or modify command-line flags → regenerate CLI docs
+- Add or modify API endpoints → regenerate Swagger docs
+- Change API request/response types → regenerate Swagger docs
+
+Always commit the generated documentation files along with your code changes.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

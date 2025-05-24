@@ -7,12 +7,13 @@ import (
 )
 
 type State struct {
-	mu          sync.RWMutex
-	Event       *models.Event
-	Controls    []models.Control
-	Classes     []models.Class
-	Clubs       []models.Club
-	Competitors []models.Competitor
+	mu              sync.RWMutex
+	Event           *models.Event
+	Controls        []models.Control
+	Classes         []models.Class
+	Clubs           []models.Club
+	Competitors     []models.Competitor
+	updateCallbacks []func()
 }
 
 func New() *State {
@@ -99,4 +100,36 @@ func (s *State) GetCompetitor(id int) *models.Competitor {
 		}
 	}
 	return nil
+}
+
+// OnUpdate registers a callback to be called when the state is updated
+func (s *State) OnUpdate(callback func()) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.updateCallbacks = append(s.updateCallbacks, callback)
+}
+
+// notifyUpdate calls all registered update callbacks
+func (s *State) notifyUpdate() {
+	s.mu.RLock()
+	callbacks := make([]func(), len(s.updateCallbacks))
+	copy(callbacks, s.updateCallbacks)
+	s.mu.RUnlock()
+
+	for _, cb := range callbacks {
+		cb()
+	}
+}
+
+// UpdateFromMeOS updates the state with new data from MeOS and notifies listeners
+func (s *State) UpdateFromMeOS(event *models.Event, controls []models.Control, classes []models.Class, clubs []models.Club, competitors []models.Competitor) {
+	s.mu.Lock()
+	s.Event = event
+	s.Controls = controls
+	s.Classes = classes
+	s.Clubs = clubs
+	s.Competitors = competitors
+	s.mu.Unlock()
+
+	s.notifyUpdate()
 }

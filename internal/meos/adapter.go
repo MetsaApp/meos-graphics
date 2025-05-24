@@ -213,55 +213,62 @@ func (a *Adapter) processData(data []byte) (bool, error) {
 	newClubs := a.convertClubs(source, isMOPComplete)
 	newCompetitors := a.convertCompetitors(source, isMOPComplete)
 
-	// Update global state with lock
-	a.state.Lock()
-	defer a.state.Unlock()
+	// Get current state for updating
+	currentEvent := a.state.GetEvent()
+	currentControls := a.state.GetControls()
+	currentClasses := a.state.GetClasses()
+	currentClubs := a.state.GetClubs()
+	currentCompetitors := a.state.GetCompetitors()
 
-	a.state.Controls = updateEntities(a.state.Controls, newControls, isMOPComplete)
-	a.state.Clubs = updateEntities(a.state.Clubs, newClubs, isMOPComplete)
+	// Update entities
+	updatedControls := updateEntities(currentControls, newControls, isMOPComplete)
+	updatedClubs := updateEntities(currentClubs, newClubs, isMOPComplete)
+	updatedClasses := updateEntities(currentClasses, newClasses, isMOPComplete)
+	updatedCompetitors := updateEntities(currentCompetitors, newCompetitors, isMOPComplete)
 
-	// Update classes and resolve radio controls
-	a.state.Classes = updateEntities(a.state.Classes, newClasses, isMOPComplete)
-	for i := range a.state.Classes {
+	// Resolve radio controls for classes
+	for i := range updatedClasses {
 		resolvedRadioControls := []models.Control{}
-		for _, rc := range a.state.Classes[i].RadioControls {
-			for _, ctrl := range a.state.Controls {
+		for _, rc := range updatedClasses[i].RadioControls {
+			for _, ctrl := range updatedControls {
 				if ctrl.ID == rc.ID {
 					resolvedRadioControls = append(resolvedRadioControls, ctrl)
 					break
 				}
 			}
 		}
-		a.state.Classes[i].RadioControls = resolvedRadioControls
+		updatedClasses[i].RadioControls = resolvedRadioControls
 	}
 
-	// Update competitors and resolve references
-	a.state.Competitors = updateEntities(a.state.Competitors, newCompetitors, isMOPComplete)
-	for i := range a.state.Competitors {
+	// Resolve references for competitors
+	for i := range updatedCompetitors {
 		// Resolve club reference
-		for _, club := range a.state.Clubs {
-			if club.ID == a.state.Competitors[i].Club.ID {
-				a.state.Competitors[i].Club = club
+		for _, club := range updatedClubs {
+			if club.ID == updatedCompetitors[i].Club.ID {
+				updatedCompetitors[i].Club = club
 				break
 			}
 		}
 		// Resolve class reference
-		for _, class := range a.state.Classes {
-			if class.ID == a.state.Competitors[i].Class.ID {
-				a.state.Competitors[i].Class = class
+		for _, class := range updatedClasses {
+			if class.ID == updatedCompetitors[i].Class.ID {
+				updatedCompetitors[i].Class = class
 				break
 			}
 		}
 		// Resolve split control references
-		for j := range a.state.Competitors[i].Splits {
-			for _, ctrl := range a.state.Controls {
-				if ctrl.ID == a.state.Competitors[i].Splits[j].Control.ID {
-					a.state.Competitors[i].Splits[j].Control = ctrl
+		for j := range updatedCompetitors[i].Splits {
+			for _, ctrl := range updatedControls {
+				if ctrl.ID == updatedCompetitors[i].Splits[j].Control.ID {
+					updatedCompetitors[i].Splits[j].Control = ctrl
 					break
 				}
 			}
 		}
 	}
+
+	// Update state atomically and notify listeners
+	a.state.UpdateFromMeOS(currentEvent, updatedControls, updatedClasses, updatedClubs, updatedCompetitors)
 
 	return true, nil
 }
