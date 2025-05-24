@@ -95,6 +95,8 @@ func (h *Hub) BroadcastUpdate(eventType string, data interface{}) {
 		Data: data,
 	}
 
+	logger.DebugLogger.Printf("Broadcasting SSE event '%s' to %d clients", eventType, h.GetConnectedClients())
+
 	select {
 	case h.broadcast <- event:
 	default:

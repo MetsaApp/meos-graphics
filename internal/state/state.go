@@ -3,6 +3,7 @@ package state
 import (
 	"sync"
 
+	"meos-graphics/internal/logger"
 	"meos-graphics/internal/models"
 )
 
@@ -145,32 +146,61 @@ func (s *State) UpdateFromMeOS(event *models.Event, controls []models.Control, c
 		hasChanges = true
 	}
 
-	// For competitors, check if any have different status or finish times
+	// For competitors, check if any have different status, finish times, or order
 	if !hasChanges && len(s.Competitors) == len(competitors) {
+		// Build a map of current competitors by ID for efficient lookup
+		currentMap := make(map[int]*models.Competitor)
+		for i := range s.Competitors {
+			currentMap[s.Competitors[i].ID] = &s.Competitors[i]
+		}
+
+		// Check each competitor for changes
 		for i := range competitors {
-			if i >= len(s.Competitors) {
+			// Check if the order has changed (competitor at position i has different ID)
+			if i < len(s.Competitors) && s.Competitors[i].ID != competitors[i].ID {
+				logger.DebugLogger.Printf("Competitor order changed at position %d: was ID %d, now ID %d",
+					i, s.Competitors[i].ID, competitors[i].ID)
 				hasChanges = true
 				break
 			}
-			if s.Competitors[i].Status != competitors[i].Status {
+
+			// Find the current version of this competitor
+			current, exists := currentMap[competitors[i].ID]
+			if !exists {
 				hasChanges = true
 				break
 			}
-			if (s.Competitors[i].FinishTime == nil) != (competitors[i].FinishTime == nil) {
+
+			// Check for status changes
+			if current.Status != competitors[i].Status {
 				hasChanges = true
 				break
 			}
-			if len(s.Competitors[i].Splits) != len(competitors[i].Splits) {
+
+			// Check for finish time changes
+			if (current.FinishTime == nil) != (competitors[i].FinishTime == nil) {
 				hasChanges = true
 				break
 			}
-			// Also check if split times have changed
+			if current.FinishTime != nil && competitors[i].FinishTime != nil &&
+				*current.FinishTime != *competitors[i].FinishTime {
+				hasChanges = true
+				break
+			}
+
+			// Check for splits changes
+			if len(current.Splits) != len(competitors[i].Splits) {
+				hasChanges = true
+				break
+			}
+
+			// Check if split times have changed
 			for j := range competitors[i].Splits {
-				if j >= len(s.Competitors[i].Splits) {
+				if j >= len(current.Splits) {
 					hasChanges = true
 					break
 				}
-				if s.Competitors[i].Splits[j].PassingTime != competitors[i].Splits[j].PassingTime {
+				if current.Splits[j].PassingTime != competitors[i].Splits[j].PassingTime {
 					hasChanges = true
 					break
 				}
@@ -192,6 +222,9 @@ func (s *State) UpdateFromMeOS(event *models.Event, controls []models.Control, c
 
 	// Only notify if there were changes
 	if hasChanges {
+		logger.DebugLogger.Println("State changed, notifying update listeners")
 		s.notifyUpdate()
+	} else {
+		logger.DebugLogger.Println("No state changes detected, skipping notification")
 	}
 }
