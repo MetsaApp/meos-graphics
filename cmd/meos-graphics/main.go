@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"os"
 	"os/signal"
@@ -9,7 +8,9 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/spf13/cobra"
 
+	"meos-graphics/internal/cmd"
 	"meos-graphics/internal/handlers"
 	"meos-graphics/internal/logger"
 	"meos-graphics/internal/meos"
@@ -20,36 +21,30 @@ import (
 )
 
 func main() {
-	// Parse command line flags
-	simulationMode := flag.Bool("simulation", false, "Run in simulation mode")
-	showVersion := flag.Bool("version", false, "Show version information")
-	pollInterval := flag.Duration("poll-interval", 1*time.Second, "Poll interval for MeOS data updates (e.g., 200ms, 9s, 2m)")
-	meosHost := flag.String("meos-host", "localhost", "MeOS server hostname or IP address")
-	meosPort := flag.String("meos-port", "2009", "MeOS server port (use 'none' to omit port from URL)")
-	flag.Parse()
-
-	if *showVersion {
-		fmt.Printf("meos-graphics version %s\n", version.Version)
-		os.Exit(0)
+	rootCmd := cmd.NewRootCommand()
+	rootCmd.RunE = run
+	
+	if err := rootCmd.Execute(); err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		os.Exit(1)
 	}
+}
 
+func run(cobraCmd *cobra.Command, args []string) error {
 	// Validate poll interval
-	if *pollInterval < 100*time.Millisecond {
-		fmt.Printf("Error: poll interval too small (minimum 100ms): %s\n", *pollInterval)
-		os.Exit(1)
+	if cmd.PollInterval < 100*time.Millisecond {
+		return fmt.Errorf("poll interval too small (minimum 100ms): %s", cmd.PollInterval)
 	}
-	if *pollInterval > 1*time.Hour {
-		fmt.Printf("Error: poll interval too large (maximum 1 hour): %s\n", *pollInterval)
-		os.Exit(1)
+	if cmd.PollInterval > 1*time.Hour {
+		return fmt.Errorf("poll interval too large (maximum 1 hour): %s", cmd.PollInterval)
 	}
 
 	if err := logger.Init(); err != nil {
-		fmt.Printf("Failed to initialize logger: %v\n", err)
-		os.Exit(1)
+		return fmt.Errorf("failed to initialize logger: %v", err)
 	}
 
 	logger.InfoLogger.Printf("Starting MeOS Graphics API Server v%s", version.Version)
-	if *simulationMode {
+	if cmd.SimulationMode {
 		logger.InfoLogger.Println("Running in SIMULATION MODE")
 	}
 
@@ -63,15 +58,15 @@ func main() {
 		Stop() error
 	}
 
-	if *simulationMode {
+	if cmd.SimulationMode {
 		// Use simulation adapter
 		adapter = simulation.NewAdapter(appState)
 	} else {
 		// Configure MeOS adapter
 		config := meos.NewConfig()
-		config.Hostname = *meosHost
-		config.PortStr = *meosPort
-		config.PollInterval = *pollInterval
+		config.Hostname = cmd.MeosHost
+		config.PortStr = cmd.MeosPort
+		config.PollInterval = cmd.PollInterval
 
 		// Log configuration based on port setting
 		if config.PortStr == "none" {
@@ -82,7 +77,7 @@ func main() {
 
 		if err := config.Validate(); err != nil {
 			logger.ErrorLogger.Printf("Invalid configuration: %v", err)
-			os.Exit(1)
+			return err
 		}
 
 		adapter = meos.NewAdapter(config, appState)
@@ -91,7 +86,7 @@ func main() {
 	// Connect adapter
 	if err := adapter.Connect(); err != nil {
 		logger.ErrorLogger.Printf("Failed to connect: %v", err)
-		if !*simulationMode {
+		if !cmd.SimulationMode {
 			logger.ErrorLogger.Println("Starting in offline mode - MeOS server not available")
 		}
 	} else {
@@ -148,4 +143,5 @@ func main() {
 	}
 
 	logger.InfoLogger.Println("Shutdown complete")
+	return nil
 }

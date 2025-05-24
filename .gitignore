@@ -34,4 +34,4 @@ logs/
 
 # Build output
 /meos-graphics
-dist/
+dist/bin/

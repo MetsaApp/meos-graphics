@@ -1,0 +1,37 @@
+package cmd
+
+import (
+	"time"
+
+	"github.com/spf13/cobra"
+	"meos-graphics/internal/version"
+)
+
+var (
+	SimulationMode bool
+	PollInterval   time.Duration
+	MeosHost       string
+	MeosPort       string
+)
+
+// NewRootCommand creates and returns the root cobra command
+func NewRootCommand() *cobra.Command {
+	rootCmd := &cobra.Command{
+		Use:   "meos-graphics",
+		Short: "MeOS Graphics API Server",
+		Long: `MeOS Graphics API Server connects to MeOS (orienteering event software) 
+and provides competition data for graphics displays.
+
+The server can run in two modes:
+- Normal mode: Connects to a real MeOS server
+- Simulation mode: Generates test data for development`,
+		Version: version.Version,
+	}
+
+	rootCmd.Flags().BoolVar(&SimulationMode, "simulation", false, "Run in simulation mode")
+	rootCmd.Flags().DurationVar(&PollInterval, "poll-interval", 1*time.Second, "Poll interval for MeOS data updates (e.g., 200ms, 9s, 2m)")
+	rootCmd.Flags().StringVar(&MeosHost, "meos-host", "localhost", "MeOS server hostname or IP address")
+	rootCmd.Flags().StringVar(&MeosPort, "meos-port", "2009", "MeOS server port (use 'none' to omit port from URL)")
+
+	return rootCmd
+}
