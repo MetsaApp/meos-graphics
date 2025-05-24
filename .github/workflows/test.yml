@@ -28,3 +28,9 @@ jobs:
       with:
         version: latest
         args: --timeout=5m
+        
+    - name: Check documentation is up-to-date
+      run: |
+        go run ./cmd/generate-docs
+        git diff --exit-code docs/CLI_FLAGS.md || \
+          (echo "Documentation is out of date. Run 'go run ./cmd/generate-docs' and commit the changes." && exit 1)
