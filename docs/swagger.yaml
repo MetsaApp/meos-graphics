@@ -1,6 +1,6 @@
 basePath: /
 definitions:
-  service.ClassInfo:
+  meos-graphics_internal_service.ClassInfo:
     properties:
       id:
         type: integer
@@ -9,7 +9,7 @@ definitions:
       orderKey:
         type: integer
     type: object
-  service.RadioTime:
+  meos-graphics_internal_service.RadioTime:
     properties:
       controlName:
         type: string
@@ -18,7 +18,7 @@ definitions:
       splitTime:
         type: string
     type: object
-  service.ResultEntry:
+  meos-graphics_internal_service.ResultEntry:
     properties:
       club:
         type: string
@@ -30,7 +30,7 @@ definitions:
         type: integer
       radioTimes:
         items:
-          $ref: '#/definitions/service.RadioTime'
+          $ref: '#/definitions/meos-graphics_internal_service.RadioTime'
         type: array
       startTime:
         type: string
@@ -41,7 +41,7 @@ definitions:
       timeDifference:
         type: string
     type: object
-  service.SplitStanding:
+  meos-graphics_internal_service.SplitStanding:
     properties:
       controlId:
         type: integer
@@ -49,10 +49,10 @@ definitions:
         type: string
       standings:
         items:
-          $ref: '#/definitions/service.SplitTime'
+          $ref: '#/definitions/meos-graphics_internal_service.SplitTime'
         type: array
     type: object
-  service.SplitTime:
+  meos-graphics_internal_service.SplitTime:
     properties:
       club:
         type: string
@@ -69,16 +69,16 @@ definitions:
       timeDifference:
         type: string
     type: object
-  service.SplitsResponse:
+  meos-graphics_internal_service.SplitsResponse:
     properties:
       className:
         type: string
       splits:
         items:
-          $ref: '#/definitions/service.SplitStanding'
+          $ref: '#/definitions/meos-graphics_internal_service.SplitStanding'
         type: array
     type: object
-  service.StartListEntry:
+  meos-graphics_internal_service.StartListEntry:
     properties:
       card:
         type: integer
@@ -103,7 +103,7 @@ info:
     url: https://opensource.org/licenses/MIT
   termsOfService: http://swagger.io/terms/
   title: meos-graphics
-  version: "0.0.0"
+  version: "0.0.0 x-release-please-version"
 paths:
   /classes:
     get:
@@ -117,7 +117,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/service.ClassInfo'
+              $ref: '#/definitions/meos-graphics_internal_service.ClassInfo'
             type: array
       summary: Get all competition classes
       tags:
@@ -141,7 +141,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/service.ResultEntry'
+              $ref: '#/definitions/meos-graphics_internal_service.ResultEntry'
             type: array
         "400":
           description: Bad Request
@@ -175,7 +175,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/service.SplitsResponse'
+            $ref: '#/definitions/meos-graphics_internal_service.SplitsResponse'
         "400":
           description: Bad Request
           schema:
@@ -209,7 +209,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/service.StartListEntry'
+              $ref: '#/definitions/meos-graphics_internal_service.StartListEntry'
             type: array
         "400":
           description: Bad Request

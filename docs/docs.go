@@ -43,7 +43,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/service.ClassInfo"
+                                "$ref": "#/definitions/meos-graphics_internal_service.ClassInfo"
                             }
                         }
                     }
@@ -78,7 +78,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/service.ResultEntry"
+                                "$ref": "#/definitions/meos-graphics_internal_service.ResultEntry"
                             }
                         }
                     },
@@ -129,7 +129,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/service.SplitsResponse"
+                            "$ref": "#/definitions/meos-graphics_internal_service.SplitsResponse"
                         }
                     },
                     "400": {
@@ -181,7 +181,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/service.StartListEntry"
+                                "$ref": "#/definitions/meos-graphics_internal_service.StartListEntry"
                             }
                         }
                     },
@@ -208,7 +208,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "service.ClassInfo": {
+        "meos-graphics_internal_service.ClassInfo": {
             "type": "object",
             "properties": {
                 "id": {
@@ -222,7 +222,7 @@ const docTemplate = `{
                 }
             }
         },
-        "service.RadioTime": {
+        "meos-graphics_internal_service.RadioTime": {
             "type": "object",
             "properties": {
                 "controlName": {
@@ -236,7 +236,7 @@ const docTemplate = `{
                 }
             }
         },
-        "service.ResultEntry": {
+        "meos-graphics_internal_service.ResultEntry": {
             "type": "object",
             "properties": {
                 "club": {
@@ -254,7 +254,7 @@ const docTemplate = `{
                 "radioTimes": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/service.RadioTime"
+                        "$ref": "#/definitions/meos-graphics_internal_service.RadioTime"
                     }
                 },
                 "startTime": {
@@ -271,7 +271,7 @@ const docTemplate = `{
                 }
             }
         },
-        "service.SplitStanding": {
+        "meos-graphics_internal_service.SplitStanding": {
             "type": "object",
             "properties": {
                 "controlId": {
@@ -283,12 +283,12 @@ const docTemplate = `{
                 "standings": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/service.SplitTime"
+                        "$ref": "#/definitions/meos-graphics_internal_service.SplitTime"
                     }
                 }
             }
         },
-        "service.SplitTime": {
+        "meos-graphics_internal_service.SplitTime": {
             "type": "object",
             "properties": {
                 "club": {
@@ -314,7 +314,7 @@ const docTemplate = `{
                 }
             }
         },
-        "service.SplitsResponse": {
+        "meos-graphics_internal_service.SplitsResponse": {
             "type": "object",
             "properties": {
                 "className": {
@@ -323,12 +323,12 @@ const docTemplate = `{
                 "splits": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/service.SplitStanding"
+                        "$ref": "#/definitions/meos-graphics_internal_service.SplitStanding"
                     }
                 }
             }
         },
-        "service.StartListEntry": {
+        "meos-graphics_internal_service.StartListEntry": {
             "type": "object",
             "properties": {
                 "card": {
