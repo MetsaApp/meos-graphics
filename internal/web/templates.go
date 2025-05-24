@@ -236,7 +236,6 @@ function showTab(tabName) {
     <table class="min-w-full divide-y divide-gray-300">
         <thead class="bg-gray-50">
             <tr>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Club</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Start Time</th>
@@ -246,7 +245,6 @@ function showTab(tabName) {
         <tbody class="bg-white divide-y divide-gray-200">
             {{range .StartList}}
             <tr>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{.StartNumber}}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{.Name}}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{.Club}}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{formatTime .StartTime}}</td>
@@ -281,7 +279,7 @@ function showTab(tabName) {
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
             {{range .Results}}
-            <tr class="{{if eq .Status "DNF"}}bg-red-50{{else if eq .Status "DNS"}}bg-gray-50{{else if eq .Status "MP"}}bg-yellow-50{{end}}">
+            <tr class="{{if eq .Status "DNF"}}bg-red-50{{else if eq .Status "DNS"}}bg-gray-50{{else if eq .Status "MP"}}bg-yellow-50{{else if eq .Status "Running"}}bg-blue-50{{end}}">
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {{if .Position}}{{.Position}}{{else}}-{{end}}
                 </td>
@@ -295,7 +293,7 @@ function showTab(tabName) {
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm">
                     <span class="inline-flex rounded-full px-2 text-xs font-semibold leading-5
-                        {{if eq .Status "OK"}}bg-green-100 text-green-800{{else if eq .Status "DNF"}}bg-red-100 text-red-800{{else if eq .Status "DNS"}}bg-gray-100 text-gray-800{{else if eq .Status "MP"}}bg-yellow-100 text-yellow-800{{end}}">
+                        {{if eq .Status "OK"}}bg-green-100 text-green-800{{else if eq .Status "DNF"}}bg-red-100 text-red-800{{else if eq .Status "DNS"}}bg-gray-100 text-gray-800{{else if eq .Status "MP"}}bg-yellow-100 text-yellow-800{{else if eq .Status "Running"}}bg-blue-100 text-blue-800{{end}}">
                         {{.Status}}
                     </span>
                 </td>

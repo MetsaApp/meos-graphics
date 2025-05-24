@@ -314,7 +314,7 @@ func TestAdapter_ResetBehavior(t *testing.T) {
 
 	// Manually advance generator to a finished state
 	event := appState.GetEvent()
-	finishedTime := event.Start.Add(12 * time.Minute)
+	finishedTime := event.Start.Add(14 * time.Minute) // Just before reset at 15 minutes
 	competitors := adapter.generator.UpdateSimulation(finishedTime)
 
 	// Verify some are finished

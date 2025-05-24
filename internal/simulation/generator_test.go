@@ -155,18 +155,20 @@ func TestGenerator_DeterministicOutput(t *testing.T) {
 
 	// Create two generators with same seed
 	g1 := &Generator{
-		rnd:          rand.New(rand.NewSource(12345)),
-		duration:     15 * time.Minute,
-		phaseStart:   3 * time.Minute,
-		phaseRunning: 7 * time.Minute,
-		phaseResults: 5 * time.Minute,
+		rnd:               rand.New(rand.NewSource(12345)),
+		duration:          15 * time.Minute,
+		phaseStart:        3 * time.Minute,
+		phaseRunning:      7 * time.Minute,
+		phaseResults:      5 * time.Minute,
+		competitorTimings: make(map[int]competitorTiming),
 	}
 	g2 := &Generator{
-		rnd:          rand.New(rand.NewSource(12345)),
-		duration:     15 * time.Minute,
-		phaseStart:   3 * time.Minute,
-		phaseRunning: 7 * time.Minute,
-		phaseResults: 5 * time.Minute,
+		rnd:               rand.New(rand.NewSource(12345)),
+		duration:          15 * time.Minute,
+		phaseStart:        3 * time.Minute,
+		phaseRunning:      7 * time.Minute,
+		phaseResults:      5 * time.Minute,
+		competitorTimings: make(map[int]competitorTiming),
 	}
 
 	_, _, _, _, competitors1 := g1.GenerateInitialData(baseTime)
