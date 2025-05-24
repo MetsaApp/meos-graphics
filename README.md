@@ -211,6 +211,67 @@ The application follows Go best practices with clear separation of concerns:
 
 ## Development
 
+### Pre-commit Hooks
+
+This project uses [Lefthook](https://github.com/evilmartians/lefthook) for pre-commit hooks to ensure code quality before commits are made.
+
+#### Installation
+
+1. Install Lefthook:
+   ```bash
+   # Using Go
+   go install github.com/evilmartians/lefthook@latest
+   
+   # Or using Homebrew (macOS)
+   brew install lefthook
+   
+   # Or download binary from releases
+   # https://github.com/evilmartians/lefthook/releases
+   ```
+
+2. Install golangci-lint (required for linting):
+   ```bash
+   # Binary installation (recommended)
+   curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.62.2
+   
+   # See https://golangci-lint.run/usage/install/#local-installation for other methods
+   ```
+
+3. Install the git hooks:
+   ```bash
+   lefthook install
+   ```
+
+#### What Gets Checked
+
+The pre-commit hooks run the following checks in parallel:
+- **Build**: Ensures the code compiles (`go build`)
+- **Test**: Runs all unit tests (`go test`)
+- **Lint**: Runs golangci-lint with project settings
+- **Docs**: Ensures CLI documentation is up-to-date
+
+#### Bypassing Hooks
+
+If you need to bypass the hooks temporarily:
+```bash
+# Skip all hooks
+git commit --no-verify
+
+# Skip specific hooks using tags
+LEFTHOOK_EXCLUDE=lint,test git commit
+```
+
+#### Running Hooks Manually
+
+You can run the hooks manually without committing:
+```bash
+# Run all pre-commit hooks
+lefthook run pre-commit
+
+# Run specific hooks by tag
+lefthook run pre-commit --tags=build,test
+```
+
 ### Updating CLI Documentation
 
 The CLI documentation in `docs/CLI_FLAGS.md` is automatically generated from the code. To update it:
@@ -220,4 +281,4 @@ The CLI documentation in `docs/CLI_FLAGS.md` is automatically generated from the
 go run ./cmd/generate-docs
 ```
 
-The CI pipeline validates that the documentation is up-to-date. If you add or modify command-line flags, you must regenerate the documentation and commit the changes.
+The CI pipeline and pre-commit hooks validate that the documentation is up-to-date. If you add or modify command-line flags, you must regenerate the documentation and commit the changes.

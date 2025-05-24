@@ -9,7 +9,7 @@ This is a Go-based REST API server that connects to MeOS (orienteering event sof
 ## Key Technical Details
 
 ### Architecture
-- **Language**: Go 1.21+
+- **Language**: Go 1.23+
 - **Web Framework**: gin-gonic/gin
 - **Architecture Pattern**: Clean architecture with separation of concerns
 - **Concurrency**: Thread-safe state management using sync.RWMutex
