@@ -28,14 +28,14 @@ import (
 	_ "meos-graphics/docs" // Import generated swagger docs
 )
 
-// @title MeOS Graphics API
+// @title meos-graphics
 // @version 0.0.0 x-release-please-version
 // @description REST API for accessing orienteering competition data from MeOS
 // @termsOfService http://swagger.io/terms/
 
-// @contact.name MeOS Graphics Support
+// @contact.name @malpou
 // @contact.url https://github.com/MetsaApp/meos-graphics
-// @contact.email support@example.com
+// @contact.email malthe@grundtvigsvej.dk
 
 // @license.name MIT
 // @license.url https://opensource.org/licenses/MIT
