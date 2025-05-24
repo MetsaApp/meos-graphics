@@ -23,14 +23,14 @@ import (
 func main() {
 	rootCmd := cmd.NewRootCommand()
 	rootCmd.RunE = run
-	
+
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
 }
 
-func run(cobraCmd *cobra.Command, args []string) error {
+func run(_ *cobra.Command, _ []string) error {
 	// Validate poll interval
 	if cmd.PollInterval < 100*time.Millisecond {
 		return fmt.Errorf("poll interval too small (minimum 100ms): %s", cmd.PollInterval)

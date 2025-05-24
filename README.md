@@ -46,14 +46,17 @@ meos-graphics/
 
 ## Configuration
 
-### MeOS Server Configuration
+### Command-Line Flags
 
-Configure the MeOS server connection using command-line flags:
+All configuration is done through command-line flags. For a complete reference of all available flags, see [docs/CLI_FLAGS.md](docs/CLI_FLAGS.md).
 
-```bash
---meos-host <hostname>  # MeOS server hostname or IP (default: localhost)
---meos-port <port>      # MeOS server port (default: 2009, use 'none' to omit port)
-```
+Common flags:
+- `--simulation` - Run in simulation mode (no MeOS server required)
+- `--meos-host <hostname>` - MeOS server hostname or IP (default: localhost)
+- `--meos-port <port>` - MeOS server port (default: 2009, use 'none' to omit port)
+- `--poll-interval <duration>` - How often to fetch updates from MeOS (default: 1s)
+- `--version` - Show version information
+- `--help` - Show help for all available flags
 
 Examples:
 ```bash
@@ -65,21 +68,14 @@ go run ./cmd/meos-graphics --meos-host 192.168.1.100 --meos-port 8080
 
 # Connect without port (for reverse proxy setups)
 go run ./cmd/meos-graphics --meos-host meos.example.com --meos-port none
+
+# Use faster polling for more responsive updates
+go run ./cmd/meos-graphics --poll-interval 200ms
 ```
 
-### Poll Interval Configuration
+### Poll Interval Details
 
-The `--poll-interval` flag allows you to customize how frequently the server fetches updates from MeOS:
-
-```bash
-# Examples of valid formats:
---poll-interval 200ms    # 200 milliseconds
---poll-interval 9s       # 9 seconds
---poll-interval 2m       # 2 minutes
---poll-interval 1m30s    # 1 minute and 30 seconds
-```
-
-Constraints:
+The `--poll-interval` flag accepts Go duration strings:
 - Minimum: 100ms
 - Maximum: 1 hour
 - Default: 1s
@@ -212,3 +208,16 @@ The application follows Go best practices with clear separation of concerns:
 - **Handlers** implement the REST API endpoints
 - **Logger** provides structured logging to file and console
 - **Middleware** handles cross-cutting concerns like request logging
+
+## Development
+
+### Updating CLI Documentation
+
+The CLI documentation in `docs/CLI_FLAGS.md` is automatically generated from the code. To update it:
+
+```bash
+# Generate documentation
+go run ./cmd/generate-docs
+```
+
+The CI pipeline validates that the documentation is up-to-date. If you add or modify command-line flags, you must regenerate the documentation and commit the changes.
