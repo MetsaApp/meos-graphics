@@ -314,6 +314,13 @@ function showTab(tabName) {
 	tmpl = template.Must(tmpl.Parse(`
 {{define "splits-partial"}}
 <div class="space-y-6">
+    {{$hasAnyStandings := false}}
+    {{range .Splits.Splits}}
+        {{if .Standings}}
+            {{$hasAnyStandings = true}}
+        {{end}}
+    {{end}}
+    
     {{range .Splits.Splits}}
     {{if .Standings}}
     <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
@@ -351,9 +358,14 @@ function showTab(tabName) {
     </div>
     {{end}}
     {{end}}
+    
     {{if not .Splits.Splits}}
     <div class="text-center py-12">
         <p class="text-gray-500">No split times available</p>
+    </div>
+    {{else if not $hasAnyStandings}}
+    <div class="text-center py-12">
+        <p class="text-gray-500">No competitors have passed any radio controls yet</p>
     </div>
     {{end}}
 </div>
