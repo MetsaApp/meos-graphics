@@ -12,6 +12,12 @@ var (
 	PollInterval   time.Duration
 	MeosHost       string
 	MeosPort       string
+
+	// Simulation timing configuration
+	SimulationDuration     time.Duration
+	SimulationPhaseStart   time.Duration
+	SimulationPhaseRunning time.Duration
+	SimulationPhaseResults time.Duration
 )
 
 // NewRootCommand creates and returns the root cobra command
@@ -32,6 +38,12 @@ The server can run in two modes:
 	rootCmd.Flags().DurationVar(&PollInterval, "poll-interval", 1*time.Second, "Poll interval for MeOS data updates (e.g., 200ms, 9s, 2m)")
 	rootCmd.Flags().StringVar(&MeosHost, "meos-host", "localhost", "MeOS server hostname or IP address")
 	rootCmd.Flags().StringVar(&MeosPort, "meos-port", "2009", "MeOS server port (use 'none' to omit port from URL)")
+
+	// Simulation timing flags
+	rootCmd.Flags().DurationVar(&SimulationDuration, "simulation-duration", 15*time.Minute, "Total simulation cycle duration (only with --simulation)")
+	rootCmd.Flags().DurationVar(&SimulationPhaseStart, "simulation-phase-start", 3*time.Minute, "Duration of start list phase (only with --simulation)")
+	rootCmd.Flags().DurationVar(&SimulationPhaseRunning, "simulation-phase-running", 7*time.Minute, "Duration of running phase (only with --simulation)")
+	rootCmd.Flags().DurationVar(&SimulationPhaseResults, "simulation-phase-results", 5*time.Minute, "Duration of results phase (only with --simulation)")
 
 	return rootCmd
 }

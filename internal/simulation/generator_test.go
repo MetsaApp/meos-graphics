@@ -10,9 +10,9 @@ import (
 )
 
 func TestNewGenerator(t *testing.T) {
-	g := NewGenerator()
+	g := NewGenerator(15*time.Minute, 3*time.Minute, 7*time.Minute, 5*time.Minute)
 	if g == nil {
-		t.Fatal("NewGenerator() returned nil")
+		t.Fatal("NewGenerator(15*time.Minute, 3*time.Minute, 7*time.Minute, 5*time.Minute) returned nil")
 	}
 	if g.rnd == nil {
 		t.Error("Generator random source is nil")
@@ -20,7 +20,7 @@ func TestNewGenerator(t *testing.T) {
 }
 
 func TestGenerator_GenerateInitialData(t *testing.T) {
-	g := NewGenerator()
+	g := NewGenerator(15*time.Minute, 3*time.Minute, 7*time.Minute, 5*time.Minute)
 	baseTime := time.Date(2024, 1, 1, 10, 0, 0, 0, time.UTC)
 
 	event, controls, classes, clubs, competitors := g.GenerateInitialData(baseTime)
@@ -154,8 +154,20 @@ func TestGenerator_DeterministicOutput(t *testing.T) {
 	baseTime := time.Date(2024, 1, 1, 10, 0, 0, 0, time.UTC)
 
 	// Create two generators with same seed
-	g1 := &Generator{rnd: rand.New(rand.NewSource(12345))}
-	g2 := &Generator{rnd: rand.New(rand.NewSource(12345))}
+	g1 := &Generator{
+		rnd:          rand.New(rand.NewSource(12345)),
+		duration:     15 * time.Minute,
+		phaseStart:   3 * time.Minute,
+		phaseRunning: 7 * time.Minute,
+		phaseResults: 5 * time.Minute,
+	}
+	g2 := &Generator{
+		rnd:          rand.New(rand.NewSource(12345)),
+		duration:     15 * time.Minute,
+		phaseStart:   3 * time.Minute,
+		phaseRunning: 7 * time.Minute,
+		phaseResults: 5 * time.Minute,
+	}
 
 	_, _, _, _, competitors1 := g1.GenerateInitialData(baseTime)
 	_, _, _, _, competitors2 := g2.GenerateInitialData(baseTime)
@@ -176,7 +188,7 @@ func TestGenerator_DeterministicOutput(t *testing.T) {
 }
 
 func TestGenerator_PhaseTransitions(t *testing.T) {
-	g := NewGenerator()
+	g := NewGenerator(15*time.Minute, 3*time.Minute, 7*time.Minute, 5*time.Minute)
 	baseTime := time.Date(2024, 1, 1, 10, 0, 0, 0, time.UTC)
 
 	g.GenerateInitialData(baseTime)
@@ -294,7 +306,7 @@ func TestGenerator_PhaseTransitions(t *testing.T) {
 }
 
 func TestGenerator_SimulationReset(t *testing.T) {
-	g := NewGenerator()
+	g := NewGenerator(15*time.Minute, 3*time.Minute, 7*time.Minute, 5*time.Minute)
 	baseTime := time.Date(2024, 1, 1, 10, 0, 0, 0, time.UTC)
 
 	g.GenerateInitialData(baseTime)
@@ -333,7 +345,7 @@ func TestGenerator_SimulationReset(t *testing.T) {
 }
 
 func TestGenerator_TimeCalculations(t *testing.T) {
-	g := NewGenerator()
+	g := NewGenerator(15*time.Minute, 3*time.Minute, 7*time.Minute, 5*time.Minute)
 	baseTime := time.Date(2024, 1, 1, 10, 0, 0, 0, time.UTC)
 
 	g.GenerateInitialData(baseTime)
@@ -378,7 +390,7 @@ func TestGenerator_TimeCalculations(t *testing.T) {
 }
 
 func TestGenerator_CompetitorProgression(t *testing.T) {
-	g := NewGenerator()
+	g := NewGenerator(15*time.Minute, 3*time.Minute, 7*time.Minute, 5*time.Minute)
 	baseTime := time.Date(2024, 1, 1, 10, 0, 0, 0, time.UTC)
 
 	g.GenerateInitialData(baseTime)
@@ -428,7 +440,7 @@ func TestGenerator_CompetitorProgression(t *testing.T) {
 }
 
 func TestGenerator_SplitTimeConsistency(t *testing.T) {
-	g := NewGenerator()
+	g := NewGenerator(15*time.Minute, 3*time.Minute, 7*time.Minute, 5*time.Minute)
 	baseTime := time.Date(2024, 1, 1, 10, 0, 0, 0, time.UTC)
 
 	g.GenerateInitialData(baseTime)
@@ -478,7 +490,7 @@ func minOfThree(a, b, c int) int {
 }
 
 func TestGenerator_ClassSpecificRadioControls(t *testing.T) {
-	g := NewGenerator()
+	g := NewGenerator(15*time.Minute, 3*time.Minute, 7*time.Minute, 5*time.Minute)
 	baseTime := time.Date(2024, 1, 1, 10, 0, 0, 0, time.UTC)
 
 	g.GenerateInitialData(baseTime)

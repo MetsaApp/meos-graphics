@@ -37,6 +37,30 @@ meos-graphics [flags]
 
 - **Description**: Run in simulation mode
 
+### --simulation-duration
+
+- **Type**: duration
+- **Default**: 15m0s
+- **Description**: Total simulation cycle duration (only with --simulation)
+
+### --simulation-phase-results
+
+- **Type**: duration
+- **Default**: 5m0s
+- **Description**: Duration of results phase (only with --simulation)
+
+### --simulation-phase-running
+
+- **Type**: duration
+- **Default**: 7m0s
+- **Description**: Duration of running phase (only with --simulation)
+
+### --simulation-phase-start
+
+- **Type**: duration
+- **Default**: 3m0s
+- **Description**: Duration of start list phase (only with --simulation)
+
 ## Examples
 
 ### Run in simulation mode
