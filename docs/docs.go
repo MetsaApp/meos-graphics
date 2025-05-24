@@ -11,9 +11,9 @@ const docTemplate = `{
         "title": "{{.Title}}",
         "termsOfService": "http://swagger.io/terms/",
         "contact": {
-            "name": "MeOS Graphics Support",
+            "name": "@malpou",
             "url": "https://github.com/MetsaApp/meos-graphics",
-            "email": "support@example.com"
+            "email": "malthe@grundtvigsvej.dk"
         },
         "license": {
             "name": "MIT",
