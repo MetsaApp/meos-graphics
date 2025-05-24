@@ -165,7 +165,7 @@ func TestGenerator_DeterministicOutput(t *testing.T) {
 	}
 
 	// Compare first few competitors
-	for i := 0; i < min(10, len(competitors1), len(competitors2)); i++ {
+	for i := 0; i < minOfThree(10, len(competitors1), len(competitors2)); i++ {
 		if competitors1[i].Name != competitors2[i].Name {
 			t.Errorf("Competitor[%d] name differs: %q vs %q", i, competitors1[i].Name, competitors2[i].Name)
 		}

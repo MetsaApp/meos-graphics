@@ -269,7 +269,7 @@ func TestState_GetCompetitor(t *testing.T) {
 	}
 }
 
-func TestState_ConcurrentReads(t *testing.T) {
+func TestState_ConcurrentReads(_ *testing.T) {
 	s := New()
 
 	// Set up test data
@@ -314,7 +314,7 @@ func TestState_ConcurrentReads(t *testing.T) {
 	// If we get here without deadlock or panic, the test passes
 }
 
-func TestState_ConcurrentReadWrite(t *testing.T) {
+func TestState_ConcurrentReadWrite(_ *testing.T) {
 	s := New()
 
 	var wg sync.WaitGroup
