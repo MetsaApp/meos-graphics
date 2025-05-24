@@ -94,16 +94,16 @@ definitions:
 host: localhost:8090
 info:
   contact:
-    email: support@example.com
-    name: MeOS Graphics Support
+    email: malthe@grundtvigsvej.dk
+    name: '@malpou'
     url: https://github.com/MetsaApp/meos-graphics
   description: REST API for accessing orienteering competition data from MeOS
   license:
     name: MIT
     url: https://opensource.org/licenses/MIT
   termsOfService: http://swagger.io/terms/
-  title: MeOS Graphics API
-  version: "1.0"
+  title: meos-graphics
+  version: "0.0.0"
 paths:
   /classes:
     get:
