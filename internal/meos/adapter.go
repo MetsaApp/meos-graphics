@@ -415,7 +415,7 @@ func (a *Adapter) convertCompetitorList(cmps []MOPCompetitor) []models.Competito
 		}
 
 		startTimeDeciseconds := cmp.StartTime()
-		
+
 		event := a.state.GetEvent()
 		if event != nil && startTimeDeciseconds > 0 {
 			eventStart := event.Start

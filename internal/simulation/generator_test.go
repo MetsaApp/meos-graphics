@@ -22,9 +22,9 @@ func TestNewGenerator(t *testing.T) {
 func TestGenerator_GenerateInitialData(t *testing.T) {
 	g := NewGenerator()
 	baseTime := time.Date(2024, 1, 1, 10, 0, 0, 0, time.UTC)
-	
+
 	event, controls, classes, clubs, competitors := g.GenerateInitialData(baseTime)
-	
+
 	// Test event
 	if event.Name != "Simulation Event" {
 		t.Errorf("Event name = %q, want %q", event.Name, "Simulation Event")
@@ -35,7 +35,7 @@ func TestGenerator_GenerateInitialData(t *testing.T) {
 	if !event.Start.Equal(baseTime) {
 		t.Errorf("Event start = %v, want %v", event.Start, baseTime)
 	}
-	
+
 	// Test controls
 	if len(controls) != 3 {
 		t.Errorf("Number of controls = %d, want 3", len(controls))
@@ -59,16 +59,16 @@ func TestGenerator_GenerateInitialData(t *testing.T) {
 			t.Errorf("Control[%d].Name = %q, want %q", i, controls[i].Name, expected.name)
 		}
 	}
-	
+
 	// Test classes
 	if len(classes) != 3 {
 		t.Errorf("Number of classes = %d, want 3", len(classes))
 	}
 	expectedClasses := []struct {
-		id             int
-		name           string
-		orderKey       int
-		radioControls  int
+		id            int
+		name          string
+		orderKey      int
+		radioControls int
 	}{
 		{1, "Men Elite", 10, 3},
 		{2, "Women Elite", 20, 3},
@@ -91,7 +91,7 @@ func TestGenerator_GenerateInitialData(t *testing.T) {
 			t.Errorf("Class[%d] radio controls = %d, want %d", i, len(classes[i].RadioControls), expected.radioControls)
 		}
 	}
-	
+
 	// Test clubs
 	if len(clubs) != len(clubNames) {
 		t.Errorf("Number of clubs = %d, want %d", len(clubs), len(clubNames))
@@ -107,17 +107,17 @@ func TestGenerator_GenerateInitialData(t *testing.T) {
 			t.Errorf("Club[%d].Name is empty", i)
 		}
 	}
-	
+
 	// Test competitors
 	if len(competitors) == 0 {
 		t.Error("No competitors generated")
 	}
-	
+
 	// Should be roughly 15-25 per class * 3 classes = 45-75 total
 	if len(competitors) < 45 || len(competitors) > 75 {
 		t.Errorf("Number of competitors = %d, want between 45 and 75", len(competitors))
 	}
-	
+
 	// Verify all competitors start at base time
 	for i, comp := range competitors {
 		if !comp.StartTime.Equal(baseTime) {
@@ -136,7 +136,7 @@ func TestGenerator_GenerateInitialData(t *testing.T) {
 			t.Errorf("Competitor[%d] card number = %d, should be >= 500001", i, comp.Card)
 		}
 	}
-	
+
 	// Verify competitor distribution across classes
 	classCounts := make(map[int]int)
 	for _, comp := range competitors {
@@ -152,18 +152,18 @@ func TestGenerator_GenerateInitialData(t *testing.T) {
 func TestGenerator_DeterministicOutput(t *testing.T) {
 	// Test that same seed produces same results
 	baseTime := time.Date(2024, 1, 1, 10, 0, 0, 0, time.UTC)
-	
+
 	// Create two generators with same seed
 	g1 := &Generator{rnd: rand.New(rand.NewSource(12345))}
 	g2 := &Generator{rnd: rand.New(rand.NewSource(12345))}
-	
+
 	_, _, _, _, competitors1 := g1.GenerateInitialData(baseTime)
 	_, _, _, _, competitors2 := g2.GenerateInitialData(baseTime)
-	
+
 	if len(competitors1) != len(competitors2) {
 		t.Errorf("Different number of competitors: %d vs %d", len(competitors1), len(competitors2))
 	}
-	
+
 	// Compare first few competitors
 	for i := 0; i < min(10, len(competitors1), len(competitors2)); i++ {
 		if competitors1[i].Name != competitors2[i].Name {
@@ -178,18 +178,18 @@ func TestGenerator_DeterministicOutput(t *testing.T) {
 func TestGenerator_PhaseTransitions(t *testing.T) {
 	g := NewGenerator()
 	baseTime := time.Date(2024, 1, 1, 10, 0, 0, 0, time.UTC)
-	
+
 	g.GenerateInitialData(baseTime)
-	
+
 	tests := []struct {
-		name         string
-		elapsed      time.Duration
+		name          string
+		elapsed       time.Duration
 		expectedPhase string
-		checkFunc    func([]models.Competitor) error
+		checkFunc     func([]models.Competitor) error
 	}{
 		{
-			name:         "Phase 1 - Start List Only",
-			elapsed:      1 * time.Minute,
+			name:          "Phase 1 - Start List Only",
+			elapsed:       1 * time.Minute,
 			expectedPhase: "start_list",
 			checkFunc: func(competitors []models.Competitor) error {
 				for i, comp := range competitors {
@@ -207,8 +207,8 @@ func TestGenerator_PhaseTransitions(t *testing.T) {
 			},
 		},
 		{
-			name:         "Phase 2 - Early Progress",
-			elapsed:      4 * time.Minute,
+			name:          "Phase 2 - Early Progress",
+			elapsed:       4 * time.Minute,
 			expectedPhase: "running",
 			checkFunc: func(competitors []models.Competitor) error {
 				runningCount := 0
@@ -231,8 +231,8 @@ func TestGenerator_PhaseTransitions(t *testing.T) {
 			},
 		},
 		{
-			name:         "Phase 2 - Late Progress",
-			elapsed:      8 * time.Minute,
+			name:          "Phase 2 - Late Progress",
+			elapsed:       8 * time.Minute,
 			expectedPhase: "running",
 			checkFunc: func(competitors []models.Competitor) error {
 				finishedCount := 0
@@ -254,8 +254,8 @@ func TestGenerator_PhaseTransitions(t *testing.T) {
 			},
 		},
 		{
-			name:         "Phase 3 - All Finished",
-			elapsed:      12 * time.Minute,
+			name:          "Phase 3 - All Finished",
+			elapsed:       12 * time.Minute,
 			expectedPhase: "finished",
 			checkFunc: func(competitors []models.Competitor) error {
 				finishedCount := 0
@@ -273,19 +273,19 @@ func TestGenerator_PhaseTransitions(t *testing.T) {
 				// Most should be finished by this point (allow for some variation)
 				expectedMinFinished := len(competitors) * 8 / 10 // At least 80%
 				if finishedCount < expectedMinFinished {
-					return fmt.Errorf("only %d/%d competitors finished (expected at least %d)", 
+					return fmt.Errorf("only %d/%d competitors finished (expected at least %d)",
 						finishedCount, len(competitors), expectedMinFinished)
 				}
 				return nil
 			},
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			currentTime := baseTime.Add(tt.elapsed)
 			competitors := g.UpdateSimulation(currentTime)
-			
+
 			if err := tt.checkFunc(competitors); err != nil {
 				t.Error(err)
 			}
@@ -296,13 +296,13 @@ func TestGenerator_PhaseTransitions(t *testing.T) {
 func TestGenerator_SimulationReset(t *testing.T) {
 	g := NewGenerator()
 	baseTime := time.Date(2024, 1, 1, 10, 0, 0, 0, time.UTC)
-	
+
 	g.GenerateInitialData(baseTime)
-	
+
 	// Run simulation to completion
 	currentTime := baseTime.Add(12 * time.Minute)
 	competitors := g.UpdateSimulation(currentTime)
-	
+
 	// Verify competitors are finished
 	finishedCount := 0
 	for _, comp := range competitors {
@@ -313,11 +313,11 @@ func TestGenerator_SimulationReset(t *testing.T) {
 	if finishedCount == 0 {
 		t.Fatal("No competitors finished before reset test")
 	}
-	
+
 	// Trigger reset by going past 15 minutes
 	resetTime := baseTime.Add(16 * time.Minute)
 	competitorsAfterReset := g.UpdateSimulation(resetTime)
-	
+
 	// Verify all competitors are reset
 	for i, comp := range competitorsAfterReset {
 		if comp.Status != "0" {
@@ -335,23 +335,23 @@ func TestGenerator_SimulationReset(t *testing.T) {
 func TestGenerator_TimeCalculations(t *testing.T) {
 	g := NewGenerator()
 	baseTime := time.Date(2024, 1, 1, 10, 0, 0, 0, time.UTC)
-	
+
 	g.GenerateInitialData(baseTime)
-	
+
 	// Run to phase 3 where all are finished
 	currentTime := baseTime.Add(12 * time.Minute)
 	competitors := g.UpdateSimulation(currentTime)
-	
+
 	for i, comp := range competitors {
 		if comp.Status != "1" {
 			continue // Skip unfinished
 		}
-		
+
 		// Verify finish time is after start time
 		if comp.FinishTime.Before(comp.StartTime) {
 			t.Errorf("Competitor[%d] finish time before start time", i)
 		}
-		
+
 		// Verify splits are in chronological order
 		prevTime := comp.StartTime
 		for j, split := range comp.Splits {
@@ -360,7 +360,7 @@ func TestGenerator_TimeCalculations(t *testing.T) {
 			}
 			prevTime = split.PassingTime
 		}
-		
+
 		// Verify finish time is after last split
 		if len(comp.Splits) > 0 {
 			lastSplit := comp.Splits[len(comp.Splits)-1]
@@ -368,7 +368,7 @@ func TestGenerator_TimeCalculations(t *testing.T) {
 				t.Errorf("Competitor[%d] finish time before last split", i)
 			}
 		}
-		
+
 		// Verify total time is reasonable (should be 35-65 minutes based on generator logic)
 		totalTime := comp.FinishTime.Sub(comp.StartTime)
 		if totalTime < 30*time.Minute || totalTime > 70*time.Minute {
@@ -380,9 +380,9 @@ func TestGenerator_TimeCalculations(t *testing.T) {
 func TestGenerator_CompetitorProgression(t *testing.T) {
 	g := NewGenerator()
 	baseTime := time.Date(2024, 1, 1, 10, 0, 0, 0, time.UTC)
-	
+
 	g.GenerateInitialData(baseTime)
-	
+
 	// Test progression at different time points
 	timePoints := []time.Duration{
 		0 * time.Minute,  // All not started
@@ -391,17 +391,17 @@ func TestGenerator_CompetitorProgression(t *testing.T) {
 		9 * time.Minute,  // Most finished
 		12 * time.Minute, // All finished
 	}
-	
+
 	prevRunningCount := 0
 	prevFinishedCount := 0
-	
+
 	for _, elapsed := range timePoints {
 		currentTime := baseTime.Add(elapsed)
 		competitors := g.UpdateSimulation(currentTime)
-		
+
 		runningCount := 0
 		finishedCount := 0
-		
+
 		for _, comp := range competitors {
 			switch comp.Status {
 			case "9":
@@ -410,9 +410,9 @@ func TestGenerator_CompetitorProgression(t *testing.T) {
 				finishedCount++
 			}
 		}
-		
+
 		t.Logf("At %v: %d running, %d finished", elapsed, runningCount, finishedCount)
-		
+
 		// Progress should generally increase (though running might decrease as they finish)
 		if elapsed > 0 {
 			totalProgress := runningCount + finishedCount
@@ -421,7 +421,7 @@ func TestGenerator_CompetitorProgression(t *testing.T) {
 				t.Errorf("Progress decreased at %v: %d < %d", elapsed, totalProgress, prevTotalProgress)
 			}
 		}
-		
+
 		prevRunningCount = runningCount
 		prevFinishedCount = finishedCount
 	}
@@ -430,33 +430,33 @@ func TestGenerator_CompetitorProgression(t *testing.T) {
 func TestGenerator_SplitTimeConsistency(t *testing.T) {
 	g := NewGenerator()
 	baseTime := time.Date(2024, 1, 1, 10, 0, 0, 0, time.UTC)
-	
+
 	g.GenerateInitialData(baseTime)
-	
+
 	// Run to completion
 	currentTime := baseTime.Add(12 * time.Minute)
 	competitors := g.UpdateSimulation(currentTime)
-	
+
 	for i, comp := range competitors {
 		if comp.Status != "1" || len(comp.Splits) == 0 {
 			continue
 		}
-		
+
 		// Check that splits have correct controls
 		for j, split := range comp.Splits {
 			expectedControl := comp.Class.RadioControls[j]
 			if split.Control.ID != expectedControl.ID {
-				t.Errorf("Competitor[%d] split[%d] control ID = %d, want %d", 
+				t.Errorf("Competitor[%d] split[%d] control ID = %d, want %d",
 					i, j, split.Control.ID, expectedControl.ID)
 			}
 		}
-		
+
 		// Check that split times increase
 		prevElapsed := time.Duration(0)
 		for j, split := range comp.Splits {
 			elapsed := split.PassingTime.Sub(comp.StartTime)
 			if elapsed <= prevElapsed {
-				t.Errorf("Competitor[%d] split[%d] time not increasing: %v <= %v", 
+				t.Errorf("Competitor[%d] split[%d] time not increasing: %v <= %v",
 					i, j, elapsed, prevElapsed)
 			}
 			prevElapsed = elapsed
@@ -464,7 +464,7 @@ func TestGenerator_SplitTimeConsistency(t *testing.T) {
 	}
 }
 
-func min(a, b, c int) int {
+func minOfThree(a, b, c int) int {
 	if a < b {
 		if a < c {
 			return a
@@ -480,13 +480,13 @@ func min(a, b, c int) int {
 func TestGenerator_ClassSpecificRadioControls(t *testing.T) {
 	g := NewGenerator()
 	baseTime := time.Date(2024, 1, 1, 10, 0, 0, 0, time.UTC)
-	
+
 	g.GenerateInitialData(baseTime)
-	
+
 	// Run to completion
 	currentTime := baseTime.Add(12 * time.Minute)
 	competitors := g.UpdateSimulation(currentTime)
-	
+
 	// Check Men Junior class has only 2 radio controls
 	for _, comp := range competitors {
 		if comp.Class.Name == "Men Junior" && comp.Status == "1" {

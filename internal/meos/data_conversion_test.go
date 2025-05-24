@@ -377,14 +377,14 @@ func TestRadioTimeParsing(t *testing.T) {
 		if len(comp.Splits) != 3 {
 			t.Errorf("Competitor 1 splits = %d, want 3", len(comp.Splits))
 		}
-		
+
 		// Check split times are sorted
 		for i := 1; i < len(comp.Splits); i++ {
 			if comp.Splits[i].PassingTime.Before(comp.Splits[i-1].PassingTime) {
 				t.Error("Splits are not sorted by passing time")
 			}
 		}
-		
+
 		// Check specific split times
 		if len(comp.Splits) >= 3 {
 			expectedElapsed := []time.Duration{

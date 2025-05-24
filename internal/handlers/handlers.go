@@ -347,7 +347,7 @@ func (h *Handler) GetSplits(c *gin.Context) {
 func formatDuration(d time.Duration) string {
 	// Convert to deciseconds to avoid floating point precision issues
 	totalDeciseconds := d.Milliseconds() / 100
-	
+
 	hours := totalDeciseconds / 36000
 	minutes := (totalDeciseconds % 36000) / 600
 	seconds := (totalDeciseconds % 600) / 10

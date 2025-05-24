@@ -353,7 +353,7 @@ func TestAdapter_ProcessData_NoUpdate(t *testing.T) {
 
 	// Process same data twice
 	adapter.processData([]byte(testhelpers.MOPCompleteXML()))
-	
+
 	// Second call should not update (same nextdifference)
 	updated, err := adapter.processData([]byte(testhelpers.MOPCompleteXML()))
 	if err != nil {

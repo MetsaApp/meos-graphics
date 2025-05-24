@@ -10,7 +10,7 @@ func TestControl_GetID(t *testing.T) {
 		ID:   123,
 		Name: "Test Control",
 	}
-	
+
 	if id := control.GetID(); id != 123 {
 		t.Errorf("GetID() = %d, want %d", id, 123)
 	}
@@ -23,7 +23,7 @@ func TestClass_GetID(t *testing.T) {
 		OrderKey:      10,
 		RadioControls: []Control{},
 	}
-	
+
 	if id := class.GetID(); id != 456 {
 		t.Errorf("GetID() = %d, want %d", id, 456)
 	}
@@ -35,7 +35,7 @@ func TestClub_GetID(t *testing.T) {
 		Name:        "Test Club",
 		CountryCode: "SWE",
 	}
-	
+
 	if id := club.GetID(); id != 789 {
 		t.Errorf("GetID() = %d, want %d", id, 789)
 	}
@@ -52,7 +52,7 @@ func TestCompetitor_GetID(t *testing.T) {
 		Club:      Club{ID: 1, Name: "Club"},
 		Class:     Class{ID: 1, Name: "Class"},
 	}
-	
+
 	if id := competitor.GetID(); id != 101 {
 		t.Errorf("GetID() = %d, want %d", id, 101)
 	}
@@ -60,15 +60,15 @@ func TestCompetitor_GetID(t *testing.T) {
 
 func TestEntity_Interface(t *testing.T) {
 	// Test that all types implement the Entity interface
-	var entities []Entity = []Entity{
+	var entities = []Entity{
 		Control{ID: 1},
 		Class{ID: 2},
 		Club{ID: 3},
 		Competitor{ID: 4},
 	}
-	
+
 	expectedIDs := []int{1, 2, 3, 4}
-	
+
 	for i, entity := range entities {
 		if id := entity.GetID(); id != expectedIDs[i] {
 			t.Errorf("Entity %d GetID() = %d, want %d", i, id, expectedIDs[i])

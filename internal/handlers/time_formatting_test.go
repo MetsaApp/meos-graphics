@@ -238,7 +238,7 @@ func TestFormatDuration_Consistency(t *testing.T) {
 	for _, ds := range testDeciseconds {
 		duration := time.Duration(ds) * 100 * time.Millisecond
 		formatted := formatDuration(duration)
-		
+
 		// The formatted string should represent the same time
 		// This is more of a sanity check than a strict test
 		t.Logf("Deciseconds: %d -> Duration: %v -> Formatted: %s", ds, duration, formatted)

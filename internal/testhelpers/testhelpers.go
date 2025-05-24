@@ -34,7 +34,7 @@ func CreateTestClass(id int, name string, orderKey int, radioControls ...models.
 }
 
 // CreateTestClub creates a test club
-func CreateTestClub(id int, name string, countryCode string) models.Club {
+func CreateTestClub(id int, name, countryCode string) models.Club {
 	return models.Club{
 		ID:          id,
 		Name:        name,
