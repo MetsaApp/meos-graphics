@@ -191,12 +191,12 @@ func run(_ *cobra.Command, _ []string) error {
 	router.Use(gin.Recovery())
 	router.Use(middleware.Logger())
 
-	// Load HTML templates
-	router.SetHTMLTemplate(web.GetTemplates())
+	// Serve static files
+	router.Static("/static", "./web/static")
 
 	// Create handlers
 	h := handlers.New(appState)
-	webHandler := web.New(svc)
+	webHandler := web.New(svc, cmd.SimulationMode)
 
 	// Health check endpoint
 	router.GET("/health", func(c *gin.Context) {

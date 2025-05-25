@@ -1,0 +1,32 @@
+package templates
+
+import (
+	"meos-graphics/internal/service"
+	"fmt"
+)
+
+templ HomePage(classes []service.ClassInfo, simulationEnabled bool) {
+	@layout("MeOS Graphics", simulationEnabled) {
+		<div class="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
+			<div class="px-4 py-6 sm:px-0">
+				<h2 class="text-2xl font-bold mb-6">Competition Classes</h2>
+				
+				<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+					for _, class := range classes {
+						<a href={ templ.SafeURL("/web/classes/" + fmt.Sprint(class.ID)) }
+						   class="block p-6 bg-white rounded-lg shadow hover:shadow-md transition-shadow">
+							<h3 class="text-lg font-semibold mb-2">{ class.Name }</h3>
+							<p class="text-sm text-gray-600">Class ID: { fmt.Sprint(class.ID) }</p>
+						</a>
+					}
+				</div>
+				
+				if len(classes) == 0 {
+					<div class="text-center py-12">
+						<p class="text-gray-500">No classes available</p>
+					</div>
+				}
+			</div>
+		</div>
+	}
+}

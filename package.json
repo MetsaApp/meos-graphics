@@ -1,0 +1,13 @@
+{
+  "name": "meos-graphics",
+  "version": "1.0.0",
+  "description": "MeOS Graphics API Web UI",
+  "private": true,
+  "scripts": {
+    "build-css": "tailwindcss -i ./web/src/styles.css -o ./web/static/css/styles.css --minify",
+    "watch-css": "tailwindcss -i ./web/src/styles.css -o ./web/static/css/styles.css --watch"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.1"
+  }
+}
