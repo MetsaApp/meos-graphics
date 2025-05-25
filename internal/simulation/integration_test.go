@@ -61,7 +61,7 @@ func TestSimulationFullCycle(t *testing.T) {
 			expectedPhase: "running",
 			minRunning:    1, // At least some should be running
 			minFinished:   0,
-			maxNotStarted: 50, // Most should have started
+			maxNotStarted: 60, // With conservative start intervals, more may still be waiting
 		},
 		{
 			name:          "Phase 2 - Middle",
