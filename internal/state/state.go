@@ -3,6 +3,7 @@ package state
 import (
 	"sync"
 
+	"meos-graphics/internal/logger"
 	"meos-graphics/internal/models"
 )
 
@@ -128,10 +129,17 @@ func (s *State) UpdateFromMeOS(event *models.Event, controls []models.Control, c
 	// Check if data has actually changed
 	hasChanges := false
 
-	// Simple change detection - could be optimized further
+	// Check event changes
 	if !hasChanges && (s.Event == nil && event != nil || s.Event != nil && event == nil) {
 		hasChanges = true
 	}
+	if !hasChanges && s.Event != nil && event != nil {
+		if s.Event.Name != event.Name || s.Event.Organizer != event.Organizer || s.Event.Start != event.Start {
+			hasChanges = true
+		}
+	}
+
+	// Check basic length changes
 	if !hasChanges && len(s.Controls) != len(controls) {
 		hasChanges = true
 	}
@@ -145,33 +153,61 @@ func (s *State) UpdateFromMeOS(event *models.Event, controls []models.Control, c
 		hasChanges = true
 	}
 
-	// For competitors, check if any have different status or finish times
+	// For competitors, create a map for efficient lookup and check all fields
 	if !hasChanges && len(s.Competitors) == len(competitors) {
-		for i := range competitors {
-			if i >= len(s.Competitors) {
+		// Create map of current competitors for O(1) lookup
+		currentMap := make(map[int]*models.Competitor)
+		for i := range s.Competitors {
+			currentMap[s.Competitors[i].ID] = &s.Competitors[i]
+		}
+
+		// Check each new competitor against current state
+		for _, newComp := range competitors {
+			current, exists := currentMap[newComp.ID]
+			if !exists {
 				hasChanges = true
 				break
 			}
-			if s.Competitors[i].Status != competitors[i].Status {
+
+			// Check all relevant fields
+			if current.Status != newComp.Status ||
+				current.Card != newComp.Card ||
+				current.Name != newComp.Name ||
+				current.StartTime != newComp.StartTime ||
+				current.Class.ID != newComp.Class.ID ||
+				current.Club.ID != newComp.Club.ID {
 				hasChanges = true
+				logger.DebugLogger.Printf("Competitor %d changed: status=%v->%v, card=%v->%v, name=%v->%v, start=%v->%v, class=%v->%v, club=%v->%v",
+					newComp.ID, current.Status, newComp.Status, current.Card, newComp.Card,
+					current.Name, newComp.Name, current.StartTime, newComp.StartTime,
+					current.Class.ID, newComp.Class.ID, current.Club.ID, newComp.Club.ID)
 				break
 			}
-			if (s.Competitors[i].FinishTime == nil) != (competitors[i].FinishTime == nil) {
+
+			// Check finish time
+			if (current.FinishTime == nil) != (newComp.FinishTime == nil) {
 				hasChanges = true
+				logger.DebugLogger.Printf("Competitor %d finish time changed: %v -> %v", newComp.ID, current.FinishTime, newComp.FinishTime)
 				break
 			}
-			if len(s.Competitors[i].Splits) != len(competitors[i].Splits) {
+			if current.FinishTime != nil && newComp.FinishTime != nil && *current.FinishTime != *newComp.FinishTime {
 				hasChanges = true
+				logger.DebugLogger.Printf("Competitor %d finish time changed: %v -> %v", newComp.ID, *current.FinishTime, *newComp.FinishTime)
 				break
 			}
-			// Also check if split times have changed
-			for j := range competitors[i].Splits {
-				if j >= len(s.Competitors[i].Splits) {
+
+			// Check splits
+			if len(current.Splits) != len(newComp.Splits) {
+				hasChanges = true
+				logger.DebugLogger.Printf("Competitor %d splits count changed: %d -> %d", newComp.ID, len(current.Splits), len(newComp.Splits))
+				break
+			}
+			for j := range newComp.Splits {
+				if j >= len(current.Splits) ||
+					current.Splits[j].Control.ID != newComp.Splits[j].Control.ID ||
+					current.Splits[j].PassingTime != newComp.Splits[j].PassingTime {
 					hasChanges = true
-					break
-				}
-				if s.Competitors[i].Splits[j].PassingTime != competitors[i].Splits[j].PassingTime {
-					hasChanges = true
+					logger.DebugLogger.Printf("Competitor %d split %d changed", newComp.ID, j)
 					break
 				}
 			}
@@ -192,6 +228,9 @@ func (s *State) UpdateFromMeOS(event *models.Event, controls []models.Control, c
 
 	// Only notify if there were changes
 	if hasChanges {
+		logger.DebugLogger.Println("State changed, notifying update callbacks")
 		s.notifyUpdate()
+	} else {
+		logger.DebugLogger.Println("No state changes detected")
 	}
 }

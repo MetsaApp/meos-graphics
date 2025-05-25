@@ -263,7 +263,7 @@ func (g *Generator) UpdateSimulation(currentTime time.Time) []models.Competitor 
 
 	// Phase 1: Start list only
 	if elapsed < g.phaseStart {
-		return g.competitors
+		return g.copyCompetitors()
 	}
 
 	// Phase 2: Competitors running and finishing
@@ -284,7 +284,29 @@ func (g *Generator) UpdateSimulation(currentTime time.Time) []models.Competitor 
 		g.resetSimulation()
 	}
 
-	return g.competitors
+	return g.copyCompetitors()
+}
+
+// copyCompetitors creates a deep copy of the competitors slice
+func (g *Generator) copyCompetitors() []models.Competitor {
+	result := make([]models.Competitor, len(g.competitors))
+	for i, comp := range g.competitors {
+		// Copy the competitor
+		result[i] = comp
+
+		// Deep copy the splits
+		if len(comp.Splits) > 0 {
+			result[i].Splits = make([]models.Split, len(comp.Splits))
+			copy(result[i].Splits, comp.Splits)
+		}
+
+		// Copy finish time pointer
+		if comp.FinishTime != nil {
+			finishTime := *comp.FinishTime
+			result[i].FinishTime = &finishTime
+		}
+	}
+	return result
 }
 
 // GetCurrentPhase returns the current simulation phase and remaining time
