@@ -95,11 +95,8 @@ func (h *Hub) BroadcastUpdate(eventType string, data interface{}) {
 		Data: data,
 	}
 
-	logger.DebugLogger.Printf("SSE: Broadcasting %s event to %d clients", eventType, h.GetConnectedClients())
-
 	select {
 	case h.broadcast <- event:
-		logger.DebugLogger.Printf("SSE: Event queued for broadcast")
 	default:
 		logger.ErrorLogger.Println("SSE broadcast channel full, dropping event")
 	}

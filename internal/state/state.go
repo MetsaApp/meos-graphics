@@ -3,7 +3,6 @@ package state
 import (
 	"sync"
 
-	"meos-graphics/internal/logger"
 	"meos-graphics/internal/models"
 )
 
@@ -177,29 +176,22 @@ func (s *State) UpdateFromMeOS(event *models.Event, controls []models.Control, c
 				current.Class.ID != newComp.Class.ID ||
 				current.Club.ID != newComp.Club.ID {
 				hasChanges = true
-				logger.DebugLogger.Printf("Competitor %d changed: status=%v->%v, card=%v->%v, name=%v->%v, start=%v->%v, class=%v->%v, club=%v->%v",
-					newComp.ID, current.Status, newComp.Status, current.Card, newComp.Card,
-					current.Name, newComp.Name, current.StartTime, newComp.StartTime,
-					current.Class.ID, newComp.Class.ID, current.Club.ID, newComp.Club.ID)
 				break
 			}
 
 			// Check finish time
 			if (current.FinishTime == nil) != (newComp.FinishTime == nil) {
 				hasChanges = true
-				logger.DebugLogger.Printf("Competitor %d finish time changed: %v -> %v", newComp.ID, current.FinishTime, newComp.FinishTime)
 				break
 			}
 			if current.FinishTime != nil && newComp.FinishTime != nil && *current.FinishTime != *newComp.FinishTime {
 				hasChanges = true
-				logger.DebugLogger.Printf("Competitor %d finish time changed: %v -> %v", newComp.ID, *current.FinishTime, *newComp.FinishTime)
 				break
 			}
 
 			// Check splits
 			if len(current.Splits) != len(newComp.Splits) {
 				hasChanges = true
-				logger.DebugLogger.Printf("Competitor %d splits count changed: %d -> %d", newComp.ID, len(current.Splits), len(newComp.Splits))
 				break
 			}
 			for j := range newComp.Splits {
@@ -207,7 +199,6 @@ func (s *State) UpdateFromMeOS(event *models.Event, controls []models.Control, c
 					current.Splits[j].Control.ID != newComp.Splits[j].Control.ID ||
 					current.Splits[j].PassingTime != newComp.Splits[j].PassingTime {
 					hasChanges = true
-					logger.DebugLogger.Printf("Competitor %d split %d changed", newComp.ID, j)
 					break
 				}
 			}
@@ -228,9 +219,6 @@ func (s *State) UpdateFromMeOS(event *models.Event, controls []models.Control, c
 
 	// Only notify if there were changes
 	if hasChanges {
-		logger.DebugLogger.Println("State changed, notifying update callbacks")
 		s.notifyUpdate()
-	} else {
-		logger.DebugLogger.Println("No state changes detected")
 	}
 }
