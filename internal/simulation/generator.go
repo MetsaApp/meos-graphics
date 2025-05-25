@@ -121,6 +121,7 @@ func (g *Generator) GenerateInitialData(baseTime time.Time) (models.Event, []mod
 func (g *Generator) generateCompetitors(baseTime time.Time) []models.Competitor {
 	var competitors []models.Competitor
 	competitorID := 1
+	competitorIndex := 0 // For staggered starts
 
 	// Generate competitors for each class
 	for _, class := range g.classes {
@@ -135,9 +136,42 @@ func (g *Generator) generateCompetitors(baseTime time.Time) []models.Competitor 
 				// Mass start - everyone starts at the same time
 				startTime = baseTime.Add(g.phaseStart)
 			} else {
-				// Stagger start times - 2 minutes between each competitor
-				startOffset := time.Duration(i) * 2 * time.Minute
+				// Stagger start times - calculate interval based on available time
+				// We want all competitors to start with enough time to finish
+				minRunTime := 5 * time.Minute // Minimum time needed to complete
+				if g.phaseRunning < 5*time.Minute {
+					minRunTime = g.phaseRunning / 2
+				}
+
+				// Calculate max start time to allow minimum run time
+				maxStartOffset := g.phaseRunning - minRunTime
+				if maxStartOffset < 0 {
+					maxStartOffset = 0
+				}
+
+				// Calculate appropriate interval
+				totalCompetitors := 0
+				for range g.classes {
+					// Estimate 15-25 per class
+					totalCompetitors += 20
+				}
+
+				var startInterval time.Duration
+				if totalCompetitors > 0 && maxStartOffset > 0 {
+					startInterval = maxStartOffset / time.Duration(totalCompetitors)
+					// Cap at 2 minutes max, 10 seconds min
+					if startInterval > 2*time.Minute {
+						startInterval = 2 * time.Minute
+					} else if startInterval < 10*time.Second {
+						startInterval = 10 * time.Second
+					}
+				} else {
+					startInterval = 30 * time.Second // Default fallback
+				}
+
+				startOffset := time.Duration(competitorIndex) * startInterval
 				startTime = baseTime.Add(g.phaseStart).Add(startOffset)
+				competitorIndex++
 			}
 
 			competitor := models.Competitor{
@@ -159,6 +193,17 @@ func (g *Generator) generateCompetitors(baseTime time.Time) []models.Competitor 
 		}
 	}
 
+	// Adjust start times for staggered starts to fit within running phase
+	if !g.massStart && len(competitors) > 0 {
+		startInterval := g.calculateStartInterval()
+		competitorIndex = 0
+		for i := range competitors {
+			startOffset := time.Duration(competitorIndex) * startInterval
+			competitors[i].StartTime = baseTime.Add(g.phaseStart).Add(startOffset)
+			competitorIndex++
+		}
+	}
+
 	return competitors
 }
 
@@ -167,9 +212,25 @@ func (g *Generator) generateSplitTimes(totalTime time.Duration, class models.Cla
 	numRadios := len(class.RadioControls)
 
 	if numRadios > 0 {
-		// Ensure splits are evenly distributed and leave time to finish
-		// Reserve last 10% of time for final leg to finish
-		maxSplitTime := time.Duration(float64(totalTime) * 0.9)
+		// Reserve some time for the final leg to finish
+		// For short runs, use less reservation
+		reserveRatio := 0.1
+		if totalTime < 5*time.Minute {
+			reserveRatio = 0.15 // Reserve 15% for final leg on short courses
+		}
+		maxSplitTime := time.Duration(float64(totalTime) * (1 - reserveRatio))
+
+		// Calculate minimum time between splits based on total time
+		// For short runs, use proportionally shorter minimum times
+		minLegTime := 30 * time.Second
+		if totalTime < 2*time.Minute {
+			minLegTime = time.Duration(float64(totalTime) / float64(numRadios+2))
+			if minLegTime < 5*time.Second {
+				minLegTime = 5 * time.Second
+			}
+		} else if totalTime < 5*time.Minute {
+			minLegTime = 15 * time.Second
+		}
 
 		// Split the course into segments
 		for i := 0; i < numRadios; i++ {
@@ -177,26 +238,30 @@ func (g *Generator) generateSplitTimes(totalTime time.Duration, class models.Cla
 			baseRatio := float64(i+1) / float64(numRadios+1)
 
 			// Add some variation but keep it reasonable
-			variation := (g.rnd.Float64() - 0.5) * 0.05 // ±2.5% variation
+			variation := (g.rnd.Float64() - 0.5) * 0.1 // ±5% variation
 			splitRatio := baseRatio + variation
 
 			// Calculate split time
 			splitTime := time.Duration(float64(maxSplitTime) * splitRatio)
 
-			// Ensure minimum split time and chronological order
-			minSplitTime := time.Duration(i+1) * 30 * time.Second // At least 30 seconds per split
-			if splitTime < minSplitTime {
-				splitTime = minSplitTime
+			// Ensure minimum cumulative time
+			minCumulativeTime := time.Duration(i+1) * minLegTime
+			if splitTime < minCumulativeTime {
+				splitTime = minCumulativeTime
 			}
 
 			// Ensure each split is after the previous one
-			if i > 0 && splitTime <= splitTimes[i-1] {
-				splitTime = splitTimes[i-1] + 30*time.Second
+			if i > 0 {
+				minNextSplit := splitTimes[i-1] + minLegTime
+				if splitTime <= splitTimes[i-1] {
+					splitTime = minNextSplit
+				}
 			}
 
-			// Ensure split is before finish time
-			if splitTime >= totalTime {
-				splitTime = totalTime - time.Duration(numRadios-i)*10*time.Second
+			// Ensure split is well before finish time
+			maxAllowedSplit := maxSplitTime - time.Duration(numRadios-i)*minLegTime
+			if splitTime > maxAllowedSplit {
+				splitTime = maxAllowedSplit
 			}
 
 			splitTimes = append(splitTimes, splitTime)
@@ -207,15 +272,31 @@ func (g *Generator) generateSplitTimes(totalTime time.Duration, class models.Cla
 }
 
 func (g *Generator) generateCompetitorTiming(competitorID int, class models.Class) {
-	// For short simulations, use shorter times
-	var baseTimeMinutes int
+	// Calculate the maximum time a competitor can take (90% of running phase)
+	maxRunningTime := time.Duration(float64(g.phaseRunning) * 0.9)
 
+	// For short simulations, scale times appropriately
 	if g.phaseRunning < 5*time.Minute {
-		// For very short runs, use times in seconds/minutes range
-		baseSeconds := 180 + g.rnd.Intn(240) // 3-7 minutes
+		// For very short runs, use a wider spread of times
+		// Minimum time is 30% of max, maximum is 90% of max
+		minTime := time.Duration(float64(maxRunningTime) * 0.3)
+		timeRange := time.Duration(float64(maxRunningTime) * 0.6)
+
+		// Generate base time with good spread
+		baseTime := minTime + time.Duration(g.rnd.Int63n(int64(timeRange)))
+
+		// Add seconds-level variation for more realistic spread
+		secondsVariation := g.rnd.Intn(20) - 10 // ±10 seconds
+		baseTime += time.Duration(secondsVariation) * time.Second
+
 		// Add deciseconds for realism
 		deciseconds := g.rnd.Intn(10)
-		totalTime := time.Duration(baseSeconds)*time.Second + time.Duration(deciseconds)*100*time.Millisecond
+		totalTime := baseTime + time.Duration(deciseconds)*100*time.Millisecond
+
+		// Ensure time doesn't exceed max
+		if totalTime > maxRunningTime {
+			totalTime = maxRunningTime - time.Duration(g.rnd.Intn(10))*time.Second
+		}
 
 		g.competitorTimings[competitorID] = competitorTiming{
 			totalTime:  totalTime,
@@ -225,30 +306,68 @@ func (g *Generator) generateCompetitorTiming(competitorID int, class models.Clas
 		return
 	}
 
-	// Calculate max time based on running phase duration
-	// Leave some buffer at the end for all to finish
-	maxMinutes := int(g.phaseRunning.Minutes() * 0.9) // Use 90% of running phase
+	// For longer simulations, use class-based times
+	var minMinutes, maxMinutes int
+	maxAllowedMinutes := int(maxRunningTime.Minutes())
 
-	// Base time varies by class but must fit within running phase
 	switch class.Name {
 	case "Men Elite":
-		baseTimeMinutes = minInt(45+g.rnd.Intn(15), maxMinutes) // 45-60 minutes or max
+		minMinutes = 45
+		maxMinutes = minInt(60, maxAllowedMinutes)
 	case "Women Elite":
-		baseTimeMinutes = minInt(40+g.rnd.Intn(15), maxMinutes) // 40-55 minutes or max
+		minMinutes = 40
+		maxMinutes = minInt(55, maxAllowedMinutes)
 	case "Men Junior":
-		baseTimeMinutes = minInt(30+g.rnd.Intn(10), maxMinutes) // 30-40 minutes or max
+		minMinutes = 30
+		maxMinutes = minInt(40, maxAllowedMinutes)
 	default:
-		baseTimeMinutes = minInt(45+g.rnd.Intn(15), maxMinutes)
+		minMinutes = 45
+		maxMinutes = minInt(60, maxAllowedMinutes)
 	}
 
-	// Ensure minimum reasonable time
-	if baseTimeMinutes < 5 {
-		baseTimeMinutes = 5
+	// Ensure minimum time is reasonable and doesn't exceed max
+	if minMinutes > maxMinutes {
+		minMinutes = int(float64(maxMinutes) * 0.7)
 	}
+
+	// For standard simulations (7+ minute running phase), ensure realistic minimums
+	// This must be done AFTER adjusting for maxMinutes
+	if g.phaseRunning >= 7*time.Minute {
+		// Enforce 5-minute minimum for standard competitions
+		if minMinutes < 5 {
+			minMinutes = 5
+		}
+		// If max is less than min, set them equal
+		if maxMinutes < minMinutes {
+			maxMinutes = minMinutes
+		}
+	}
+
+	// Generate time with good spread
+	timeRange := maxMinutes - minMinutes
+	if timeRange <= 0 {
+		timeRange = 1
+	}
+	baseTimeMinutes := minMinutes + g.rnd.Intn(timeRange+1)
+
+	// Add seconds-level variation for more spread
+	secondsVariation := g.rnd.Intn(60) - 30 // ±30 seconds
+	baseTime := time.Duration(baseTimeMinutes)*time.Minute + time.Duration(secondsVariation)*time.Second
 
 	// Add deciseconds for realism
 	deciseconds := g.rnd.Intn(10)
-	totalTime := time.Duration(baseTimeMinutes)*time.Minute + time.Duration(deciseconds)*100*time.Millisecond
+	totalTime := baseTime + time.Duration(deciseconds)*100*time.Millisecond
+
+	// Ensure we don't go below minimum after all variations
+	minAllowedTime := time.Duration(minMinutes) * time.Minute
+	if totalTime < minAllowedTime {
+		totalTime = minAllowedTime
+	}
+
+	// Final check to ensure time doesn't exceed max
+	if totalTime > maxRunningTime {
+		totalTime = maxRunningTime - time.Duration(g.rnd.Intn(30))*time.Second
+	}
 
 	g.competitorTimings[competitorID] = competitorTiming{
 		totalTime:  totalTime,
@@ -330,6 +449,9 @@ func (g *Generator) GetCurrentPhase() (phase string, nextPhaseIn time.Duration) 
 }
 
 func (g *Generator) updateCompetitorProgress(progress float64) {
+	// Calculate the absolute end time of the running phase
+	runningPhaseEnd := g.startTime.Add(g.phaseStart).Add(g.phaseRunning)
+
 	for i := range g.competitors {
 		comp := &g.competitors[i]
 
@@ -341,7 +463,10 @@ func (g *Generator) updateCompetitorProgress(progress float64) {
 		// Get pre-calculated timing for this competitor
 		timing, exists := g.competitorTimings[comp.ID]
 		if !exists {
-			continue
+			// This should not happen - all competitors should have timings
+			// Generate timing on the fly if missing
+			g.generateCompetitorTiming(comp.ID, comp.Class)
+			timing = g.competitorTimings[comp.ID]
 		}
 
 		// Check if competitor should have started based on current time
@@ -351,51 +476,161 @@ func (g *Generator) updateCompetitorProgress(progress float64) {
 			continue
 		}
 
-		// Determine if this competitor should have finished by now
-		// Spread finishes across the running phase
-		competitorProgress := float64(i) / float64(len(g.competitors))
+		// This competitor has started
+		if comp.Status == "0" {
+			comp.Status = "2" // Running
+		}
 
-		if progress >= competitorProgress || g.simulationTime.After(comp.StartTime) {
-			// This competitor has started
-			if comp.Status == "0" {
-				comp.Status = "2" // Running
+		// Calculate elapsed time since this competitor started
+		elapsedSinceStart := g.simulationTime.Sub(comp.StartTime)
+
+		// Progressive split revelation based on pre-calculated times
+		var splits []models.Split
+
+		for j, control := range comp.Class.RadioControls {
+			if j < len(timing.splitTimes) {
+				splitTime := timing.splitTimes[j]
+
+				// Calculate when this split would be reached
+				splitPassTime := comp.StartTime.Add(splitTime)
+
+				// Only reveal this split if:
+				// 1. Enough time has elapsed since start
+				// 2. The split time is before the end of running phase
+				// 3. We're at 100% progress (forcing all to finish)
+				if elapsedSinceStart >= splitTime && splitPassTime.Before(runningPhaseEnd) {
+					splits = append(splits, models.Split{
+						Control:     control,
+						PassingTime: splitPassTime,
+					})
+				} else if progress >= 1.0 && splitPassTime.Before(runningPhaseEnd) {
+					// Force reveal at 100% progress if within bounds
+					splits = append(splits, models.Split{
+						Control:     control,
+						PassingTime: splitPassTime,
+					})
+				}
+			}
+		}
+
+		comp.Splits = splits
+
+		// Check if should be finished
+		potentialFinishTime := comp.StartTime.Add(timing.finishTime)
+
+		// Only mark as finished if:
+		// 1. Enough time has elapsed
+		// 2. The finish time is before the end of running phase
+		// 3. We're at 100% progress (forcing all to finish)
+		if elapsedSinceStart >= timing.finishTime && potentialFinishTime.Before(runningPhaseEnd) {
+			comp.Status = "1" // Finished
+			comp.FinishTime = &potentialFinishTime
+		} else if progress >= 1.0 && potentialFinishTime.Before(runningPhaseEnd) {
+			// Force finish at 100% progress if within bounds
+			comp.Status = "1" // Finished
+			comp.FinishTime = &potentialFinishTime
+		} else if progress >= 1.0 && !potentialFinishTime.Before(runningPhaseEnd) {
+			// If the calculated finish time exceeds bounds, cap it at the running phase end
+			// This ensures everyone finishes within the phase
+			cappedFinishTime := runningPhaseEnd.Add(-1 * time.Second) // 1 second before phase end
+
+			// But make sure the capped time is after the start time
+			if cappedFinishTime.Before(comp.StartTime) || cappedFinishTime.Equal(comp.StartTime) {
+				// If running phase ends before this competitor even starts,
+				// give them a reasonable time to complete based on the phase duration
+				minRunTime := 5 * time.Minute // Default minimum for standard competitions
+				if g.phaseRunning < 5*time.Minute {
+					// For short simulations, use proportional minimum
+					minRunTime = time.Duration(float64(g.phaseRunning) * 0.5)
+				}
+				cappedFinishTime = comp.StartTime.Add(minRunTime)
 			}
 
-			// Progressive split revelation based on pre-calculated times
-			var splits []models.Split
-			elapsedSinceStart := g.simulationTime.Sub(comp.StartTime)
+			comp.Status = "1" // Finished
+			comp.FinishTime = &cappedFinishTime
 
-			for j, control := range comp.Class.RadioControls {
-				if j < len(timing.splitTimes) {
-					splitTime := timing.splitTimes[j]
+			// Ensure we have splits for finished competitors
+			if len(comp.Splits) == 0 && len(timing.splitTimes) > 0 {
+				// Create splits that fit within the capped time
+				availableTime := cappedFinishTime.Sub(comp.StartTime)
+				for j, control := range comp.Class.RadioControls {
+					if j < len(timing.splitTimes) {
+						// Distribute splits evenly within available time
+						splitRatio := float64(j+1) / float64(len(comp.Class.RadioControls)+1)
+						splitTime := time.Duration(float64(availableTime) * splitRatio * 0.9) // Use 90% to leave time for finish
+						splitPassTime := comp.StartTime.Add(splitTime)
 
-					// Only reveal this split if the competitor should have reached it
-					if elapsedSinceStart >= splitTime || progress >= 1.0 {
-						passingTime := comp.StartTime.Add(splitTime)
-						splits = append(splits, models.Split{
+						comp.Splits = append(comp.Splits, models.Split{
 							Control:     control,
-							PassingTime: passingTime,
+							PassingTime: splitPassTime,
 						})
 					}
 				}
-			}
-
-			comp.Splits = splits
-
-			// Check if should be finished
-			finishProgress := competitorProgress + 0.1 // Finish slightly after starting
-			if progress >= finishProgress && (elapsedSinceStart >= timing.finishTime || progress >= 1.0) {
-				comp.Status = "1" // Finished
-				finishTime := comp.StartTime.Add(timing.finishTime)
-				comp.FinishTime = &finishTime
+			} else {
+				// Adjust existing splits to ensure they're before the finish
+				adjustedSplits := []models.Split{}
+				for j, split := range comp.Splits {
+					if split.PassingTime.Before(cappedFinishTime) {
+						adjustedSplits = append(adjustedSplits, split)
+					} else {
+						// Cap this split time
+						adjustedTime := cappedFinishTime.Add(-time.Duration(len(comp.Splits)-j) * 10 * time.Second)
+						adjustedSplits = append(adjustedSplits, models.Split{
+							Control:     split.Control,
+							PassingTime: adjustedTime,
+						})
+					}
+				}
+				comp.Splits = adjustedSplits
 			}
 		}
 	}
 }
 
+func (g *Generator) calculateStartInterval() time.Duration {
+	// Calculate interval based on available time
+	minRunTime := 5 * time.Minute // Minimum time needed to complete
+	if g.phaseRunning < 5*time.Minute {
+		minRunTime = g.phaseRunning / 2
+	}
+
+	// Calculate max start time to allow minimum run time
+	maxStartOffset := g.phaseRunning - minRunTime
+	if maxStartOffset < 0 {
+		maxStartOffset = 0
+	}
+
+	// Estimate total competitors
+	totalCompetitors := len(g.competitors)
+	if totalCompetitors == 0 {
+		// Estimate based on classes
+		for range g.classes {
+			totalCompetitors += 20
+		}
+	}
+
+	var startInterval time.Duration
+	if totalCompetitors > 0 && maxStartOffset > 0 {
+		startInterval = maxStartOffset / time.Duration(totalCompetitors)
+		// Cap at 2 minutes max, 10 seconds min
+		if startInterval > 2*time.Minute {
+			startInterval = 2 * time.Minute
+		} else if startInterval < 10*time.Second {
+			startInterval = 10 * time.Second
+		}
+	} else {
+		startInterval = 30 * time.Second // Default fallback
+	}
+
+	return startInterval
+}
+
 func (g *Generator) resetSimulation() {
 	// Reset start time
 	g.startTime = time.Now()
+
+	// Calculate appropriate start interval
+	startInterval := g.calculateStartInterval()
 
 	// Reset all competitors
 	competitorIndex := 0
@@ -409,7 +644,7 @@ func (g *Generator) resetSimulation() {
 			g.competitors[i].StartTime = g.startTime.Add(g.phaseStart)
 		} else {
 			// Maintain staggered start times after reset
-			startOffset := time.Duration(competitorIndex) * 2 * time.Minute
+			startOffset := time.Duration(competitorIndex) * startInterval
 			g.competitors[i].StartTime = g.startTime.Add(g.phaseStart).Add(startOffset)
 			competitorIndex++
 		}
