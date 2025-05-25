@@ -525,12 +525,14 @@ func TestGenerator_ClassSpecificRadioControls(t *testing.T) {
 	for _, comp := range competitors {
 		if comp.Class.Name == "Men Junior" && comp.Status == "1" {
 			if len(comp.Splits) != 2 {
-				t.Errorf("Men Junior competitor should have 2 splits, got %d", len(comp.Splits))
+				t.Errorf("Men Junior competitor %s should have 2 splits, got %d (controls: %d)",
+					comp.Name, len(comp.Splits), len(comp.Class.RadioControls))
 			}
 		} else if comp.Status == "1" {
 			// Other classes should have 3 splits
 			if len(comp.Splits) != 3 {
-				t.Errorf("Elite class competitor should have 3 splits, got %d", len(comp.Splits))
+				t.Errorf("%s competitor %s should have 3 splits, got %d (controls: %d)",
+					comp.Class.Name, comp.Name, len(comp.Splits), len(comp.Class.RadioControls))
 			}
 		}
 	}
