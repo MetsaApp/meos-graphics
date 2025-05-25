@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
+	"runtime"
 	"syscall"
 	"time"
 
@@ -191,12 +193,27 @@ func run(_ *cobra.Command, _ []string) error {
 	router.Use(gin.Recovery())
 	router.Use(middleware.Logger())
 
-	// Load HTML templates
-	router.SetHTMLTemplate(web.GetTemplates())
+	// Serve static files from filesystem
+	staticPath := getStaticPath()
+	logger.InfoLogger.Printf("Serving static files from: %s", staticPath)
+
+	// Verify the path exists and list contents for debugging
+	if info, err := os.Stat(staticPath); err == nil && info.IsDir() {
+		if entries, readErr := os.ReadDir(staticPath); readErr == nil {
+			logger.DebugLogger.Printf("Static directory contents:")
+			for _, entry := range entries {
+				logger.DebugLogger.Printf("  - %s (dir: %v)", entry.Name(), entry.IsDir())
+			}
+		}
+	} else {
+		logger.ErrorLogger.Printf("Static path error: %v", err)
+	}
+
+	router.Static("/static", staticPath)
 
 	// Create handlers
 	h := handlers.New(appState)
-	webHandler := web.New(svc)
+	webHandler := web.New(svc, cmd.SimulationMode)
 
 	// Health check endpoint
 	router.GET("/health", func(c *gin.Context) {
@@ -293,4 +310,60 @@ func run(_ *cobra.Command, _ []string) error {
 
 	logger.InfoLogger.Println("Shutdown complete")
 	return nil
+}
+
+// getStaticPath returns the path to the static files directory.
+// It works correctly whether running with 'go run' from any directory
+// or from a compiled binary.
+func getStaticPath() string {
+	// When using 'go run', we need to check relative to working directory first
+	cwd, err := os.Getwd()
+	if err == nil {
+		possiblePaths := []string{
+			filepath.Join(cwd, "web", "static"),             // Running from project root
+			filepath.Join(cwd, "..", "..", "web", "static"), // Running from cmd/meos-graphics
+			filepath.Join(cwd, "..", "web", "static"),       // Running from cmd/
+		}
+
+		for _, path := range possiblePaths {
+			absPath, _ := filepath.Abs(path)
+			if _, statErr := os.Stat(absPath); statErr == nil {
+				return absPath
+			}
+		}
+	}
+
+	// Try to find the path relative to the source file location
+	_, filename, _, ok := runtime.Caller(0)
+	if ok {
+		// Get the directory of this source file
+		dir := filepath.Dir(filename)
+		// Navigate from cmd/meos-graphics to web/static
+		staticPath := filepath.Join(dir, "..", "..", "web", "static")
+		if _, statErr := os.Stat(staticPath); statErr == nil {
+			return staticPath
+		}
+	}
+
+	// If source-based path doesn't work, try relative to the executable
+	execPath, err := os.Executable()
+	if err == nil {
+		execDir := filepath.Dir(execPath)
+
+		// Check common relative paths from executable location
+		possiblePaths := []string{
+			filepath.Join(execDir, "web", "static"),             // Binary in project root
+			filepath.Join(execDir, "..", "..", "web", "static"), // Binary in bin/ or cmd/meos-graphics
+			filepath.Join(execDir, "..", "web", "static"),       // Binary in bin/
+		}
+
+		for _, path := range possiblePaths {
+			if _, statErr := os.Stat(path); statErr == nil {
+				return path
+			}
+		}
+	}
+
+	// Default fallback
+	return "./web/static"
 }

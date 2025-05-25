@@ -1,20 +1,36 @@
 # Build stage
 FROM golang:1.21-alpine AS builder
 
-# Install build dependencies
-RUN apk add --no-cache git
+# Install build dependencies including Node.js for Tailwind CSS
+RUN apk add --no-cache git nodejs npm
+
+# Install templ
+RUN go install github.com/a-h/templ/cmd/templ@latest
 
 # Set working directory
 WORKDIR /app
 
+# Copy package files for npm
+COPY package.json ./
+COPY tailwind.config.js ./
+
+# Install npm dependencies
+RUN npm install
+
 # Copy go mod files
 COPY go.mod go.sum ./
 
-# Download dependencies
+# Download Go dependencies
 RUN go mod download
 
 # Copy source code
 COPY . .
+
+# Generate templ files
+RUN templ generate
+
+# Build CSS with Tailwind
+RUN npm run build-css
 
 # Build the application
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o meos-graphics ./cmd/meos-graphics
@@ -34,6 +50,9 @@ WORKDIR /app
 
 # Copy binary from builder
 COPY --from=builder /app/meos-graphics .
+
+# Copy static web assets
+COPY --from=builder /app/web/static ./web/static
 
 # Create logs directory
 RUN mkdir -p /app/logs && chown -R meos:meos /app

@@ -1,0 +1,231 @@
+package templates
+
+import (
+	"meos-graphics/internal/service"
+	"time"
+	"fmt"
+)
+
+func formatTime(t time.Time) string {
+	return t.Format("15:04:05")
+}
+
+func formatDuration(d *string) string {
+	if d == nil {
+		return "-"
+	}
+	return *d
+}
+
+func hasValue(s *string) bool {
+	return s != nil && *s != ""
+}
+
+templ StartListPartial(startList []service.StartListEntry) {
+	<div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
+		<table class="min-w-full divide-y divide-gray-300">
+			<thead class="bg-gray-50">
+				<tr>
+					<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+					<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Club</th>
+					<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Start Time</th>
+					<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Card</th>
+				</tr>
+			</thead>
+			<tbody class="bg-white divide-y divide-gray-200">
+				for _, competitor := range startList {
+					<tr>
+						<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{ competitor.Name }</td>
+						<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{ competitor.Club }</td>
+						<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{ formatTime(competitor.StartTime) }</td>
+						<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+							if competitor.Card != 0 {
+								{ fmt.Sprint(competitor.Card) }
+							} else {
+								-
+							}
+						</td>
+					</tr>
+				}
+			</tbody>
+		</table>
+		if len(startList) == 0 {
+			<div class="text-center py-12">
+				<p class="text-gray-500">No competitors in start list</p>
+			</div>
+		}
+	</div>
+}
+
+templ ResultsPartial(results []service.ResultEntry) {
+	<div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
+		<table class="min-w-full divide-y divide-gray-300">
+			<thead class="bg-gray-50">
+				<tr>
+					<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pos</th>
+					<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+					<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Club</th>
+					<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
+					<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Behind</th>
+					<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+				</tr>
+			</thead>
+			<tbody class="bg-white divide-y divide-gray-200">
+				for _, result := range results {
+					<tr class={ getResultRowClass(result.Status) }>
+						<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+							if result.Position != 0 {
+								{ fmt.Sprint(result.Position) }
+							} else {
+								-
+							}
+						</td>
+						<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{ result.Name }</td>
+						<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{ result.Club }</td>
+						<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+							if hasValue(result.Time) {
+								{ formatDuration(result.Time) }
+							} else {
+								-
+							}
+						</td>
+						<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+							{ formatDuration(result.TimeDifference) }
+						</td>
+						<td class="px-6 py-4 whitespace-nowrap text-sm">
+							<span class={ "inline-flex rounded-full px-2 text-xs font-semibold leading-5", getStatusBadgeClass(result.Status) }>
+								{ result.Status }
+							</span>
+						</td>
+					</tr>
+				}
+			</tbody>
+		</table>
+		if len(results) == 0 {
+			<div class="text-center py-12">
+				<p class="text-gray-500">No results available</p>
+			</div>
+		}
+	</div>
+}
+
+func getResultRowClass(status string) string {
+	switch status {
+	case "DNF":
+		return "bg-red-50"
+	case "DNS":
+		return "bg-gray-50"
+	case "MP":
+		return "bg-yellow-50"
+	case "Running":
+		return "bg-blue-50"
+	case "Waiting":
+		return "bg-gray-50"
+	default:
+		return ""
+	}
+}
+
+func getStatusBadgeClass(status string) string {
+	switch status {
+	case "OK":
+		return "bg-green-100 text-green-800"
+	case "DNF":
+		return "bg-red-100 text-red-800"
+	case "DNS":
+		return "bg-gray-100 text-gray-800"
+	case "MP":
+		return "bg-yellow-100 text-yellow-800"
+	case "Running":
+		return "bg-blue-100 text-blue-800"
+	case "Waiting":
+		return "bg-gray-100 text-gray-800"
+	default:
+		return "bg-gray-100 text-gray-800"
+	}
+}
+
+templ SplitsPartial(splits service.SplitsResponse) {
+	<div class="space-y-6">
+		if hasAnySplitStandings(splits) {
+			for _, split := range splits.Splits {
+				if len(split.Standings) > 0 {
+					<div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
+						<div class="bg-gray-50 px-6 py-3">
+							<h3 class="text-sm font-medium text-gray-900">{ split.ControlName }</h3>
+						</div>
+						<table class="min-w-full divide-y divide-gray-300">
+							<thead class="bg-gray-50">
+								<tr>
+									<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pos</th>
+									<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+									<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Club</th>
+									<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
+									<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Behind</th>
+								</tr>
+							</thead>
+							<tbody class="bg-white divide-y divide-gray-200">
+								for _, standing := range split.Standings {
+									<tr>
+										<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+											if standing.Position != 0 {
+												{ fmt.Sprint(standing.Position) }
+											} else {
+												-
+											}
+										</td>
+										<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{ standing.Name }</td>
+										<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{ standing.Club }</td>
+										<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+											{ formatDuration(standing.ElapsedTime) }
+										</td>
+										<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+											{ formatDuration(standing.TimeDifference) }
+										</td>
+									</tr>
+								}
+							</tbody>
+						</table>
+					</div>
+				}
+			}
+		} else if len(splits.Splits) == 0 {
+			<div class="text-center py-12">
+				<p class="text-gray-500">No split times available</p>
+			</div>
+		} else {
+			<div class="text-center py-12">
+				<p class="text-gray-500">No competitors have passed any radio controls yet</p>
+			</div>
+		}
+	</div>
+}
+
+func hasAnySplitStandings(splits service.SplitsResponse) bool {
+	for _, split := range splits.Splits {
+		if len(split.Standings) > 0 {
+			return true
+		}
+	}
+	return false
+}
+
+templ ErrorPage(errorMsg string) {
+	@layout("Error", false) {
+		<div class="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
+			<div class="px-4 py-6 sm:px-0">
+				<div class="text-center">
+					<h2 class="text-2xl font-bold text-red-600 mb-4">Error</h2>
+					<p class="text-gray-600">{ errorMsg }</p>
+					<a href="/web" class="mt-4 inline-block text-blue-600 hover:text-blue-800">← Back to Home</a>
+				</div>
+			</div>
+		</div>
+	}
+}
+
+templ ErrorPartial(errorMsg string) {
+	<div class="bg-red-50 border border-red-200 rounded-md p-4">
+		<p class="text-red-800">{ errorMsg }</p>
+	</div>
+}

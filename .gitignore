@@ -35,6 +35,16 @@ logs/
 # Build output
 /meos-graphics
 dist/bin/
+bin/
+
+# Generated files
+*_templ.go
+*_templ.txt
+web/static/css/styles.css
+
+# Node modules
+node_modules/
+package-lock.json
 
 # Lefthook
 .lefthook/

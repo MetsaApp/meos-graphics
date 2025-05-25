@@ -11,6 +11,9 @@ This is a Go-based REST API server that connects to MeOS (orienteering event sof
 ### Architecture
 - **Language**: Go 1.23+
 - **Web Framework**: gin-gonic/gin
+- **Templating**: a-h/templ for type-safe HTML templates
+- **CSS Framework**: Tailwind CSS (compiled locally)
+- **JavaScript**: HTMX for dynamic updates (served locally)
 - **Architecture Pattern**: Clean architecture with separation of concerns
 - **Concurrency**: Thread-safe state management using sync.RWMutex
 - **Logging**: Dual logging to console and file
@@ -26,8 +29,16 @@ meos-graphics/
 │   ├── middleware/          # HTTP middleware
 │   ├── models/              # Domain models
 │   ├── simulation/          # Simulation mode implementation
-│   └── state/               # Thread-safe state management
-└── logs/                    # Log files (auto-created)
+│   ├── state/               # Thread-safe state management
+│   └── web/                 # Web UI handlers and templates
+│       └── templates/       # Templ template files
+├── web/                     # Web UI assets
+│   ├── src/                 # Source CSS
+│   └── static/              # Static files served by the app
+│       ├── css/             # Compiled CSS
+│       └── js/              # JavaScript files (HTMX)
+├── logs/                    # Log files (auto-created)
+└── Makefile                 # Build automation
 ```
 
 ### Running in WSL
@@ -35,13 +46,36 @@ When running in WSL, the MeOS server connection uses the Windows host IP (config
 
 ## Common Tasks
 
-### Running the Server
-```bash
-# Normal mode (connects to MeOS)
-go run ./cmd/meos-graphics
+### Building and Running
 
-# Simulation mode (test data)
-go run ./cmd/meos-graphics --simulation
+#### Prerequisites
+```bash
+# Install dependencies
+make deps
+```
+
+#### Development
+```bash
+# Build CSS and templates, then run
+make run
+
+# Run in simulation mode
+make run-sim
+
+# Development mode with hot reload (requires air)
+make dev
+
+# Watch CSS changes (in separate terminal)
+make css-watch
+```
+
+#### Production Build
+```bash
+# Full build (templates, CSS, swagger docs, and binary)
+make full-build
+
+# Run the compiled binary
+./bin/meos-graphics
 ```
 
 ### Testing Endpoints

@@ -1,55 +1,50 @@
 package web
 
 import (
-	"html/template"
 	"net/http"
 	"strconv"
 
+	"github.com/a-h/templ"
 	"github.com/gin-gonic/gin"
 
 	"meos-graphics/internal/service"
+	"meos-graphics/internal/web/templates"
 )
 
 // Handler handles web page requests
 type Handler struct {
-	service   *service.Service
-	templates *template.Template
+	service           *service.Service
+	simulationEnabled bool
 }
 
 // New creates a new web handler
-func New(svc *service.Service) *Handler {
-	h := &Handler{
-		service: svc,
+func New(svc *service.Service, simulationEnabled bool) *Handler {
+	return &Handler{
+		service:           svc,
+		simulationEnabled: simulationEnabled,
 	}
-	h.loadTemplates()
-	return h
 }
 
-// loadTemplates loads HTML templates
-func (h *Handler) loadTemplates() {
-	h.templates = GetTemplates()
+// renderTempl is a helper function to render templ components
+func renderTempl(c *gin.Context, status int, component templ.Component) {
+	c.Header("Content-Type", "text/html; charset=utf-8")
+	c.Status(status)
+	if err := component.Render(c.Request.Context(), c.Writer); err != nil {
+		c.String(http.StatusInternalServerError, "Template render error: %v", err)
+	}
 }
 
 // HomePage serves the main web interface
 func (h *Handler) HomePage(c *gin.Context) {
 	classes := h.service.GetClasses()
-
-	c.Header("Content-Type", "text/html; charset=utf-8")
-	if err := h.templates.ExecuteTemplate(c.Writer, "index", gin.H{
-		"Title":   "MeOS Graphics",
-		"Classes": classes,
-	}); err != nil {
-		c.String(http.StatusInternalServerError, "Template error: %v", err)
-	}
+	renderTempl(c, http.StatusOK, templates.HomePage(classes, h.simulationEnabled))
 }
 
 // ClassPage serves the page for a specific class
 func (h *Handler) ClassPage(c *gin.Context) {
 	classID, err := strconv.Atoi(c.Param("classId"))
 	if err != nil {
-		c.HTML(http.StatusBadRequest, "error", gin.H{
-			"Error": "Invalid class ID",
-		})
+		renderTempl(c, http.StatusBadRequest, templates.ErrorPage("Invalid class ID"))
 		return
 	}
 
@@ -64,84 +59,60 @@ func (h *Handler) ClassPage(c *gin.Context) {
 	}
 
 	if className == "" {
-		c.HTML(http.StatusNotFound, "error", gin.H{
-			"Error": "Class not found",
-		})
+		renderTempl(c, http.StatusNotFound, templates.ErrorPage("Class not found"))
 		return
 	}
 
-	c.HTML(http.StatusOK, "class", gin.H{
-		"Title":     className,
-		"ClassID":   classID,
-		"ClassName": className,
-	})
+	renderTempl(c, http.StatusOK, templates.ClassPage(classID, className, h.simulationEnabled))
 }
 
 // StartListPartial serves the start list as an HTML partial for HTMX
 func (h *Handler) StartListPartial(c *gin.Context) {
 	classID, err := strconv.Atoi(c.Param("classId"))
 	if err != nil {
-		c.HTML(http.StatusBadRequest, "error-partial", gin.H{
-			"Error": "Invalid class ID",
-		})
+		renderTempl(c, http.StatusBadRequest, templates.ErrorPartial("Invalid class ID"))
 		return
 	}
 
 	startList, err := h.service.GetStartList(classID)
 	if err != nil {
-		c.HTML(http.StatusInternalServerError, "error-partial", gin.H{
-			"Error": err.Error(),
-		})
+		renderTempl(c, http.StatusInternalServerError, templates.ErrorPartial(err.Error()))
 		return
 	}
 
-	c.HTML(http.StatusOK, "startlist-partial", gin.H{
-		"StartList": startList,
-	})
+	renderTempl(c, http.StatusOK, templates.StartListPartial(startList))
 }
 
 // ResultsPartial serves the results as an HTML partial for HTMX
 func (h *Handler) ResultsPartial(c *gin.Context) {
 	classID, err := strconv.Atoi(c.Param("classId"))
 	if err != nil {
-		c.HTML(http.StatusBadRequest, "error-partial", gin.H{
-			"Error": "Invalid class ID",
-		})
+		renderTempl(c, http.StatusBadRequest, templates.ErrorPartial("Invalid class ID"))
 		return
 	}
 
 	results, err := h.service.GetResults(classID)
 	if err != nil {
-		c.HTML(http.StatusInternalServerError, "error-partial", gin.H{
-			"Error": err.Error(),
-		})
+		renderTempl(c, http.StatusInternalServerError, templates.ErrorPartial(err.Error()))
 		return
 	}
 
-	c.HTML(http.StatusOK, "results-partial", gin.H{
-		"Results": results,
-	})
+	renderTempl(c, http.StatusOK, templates.ResultsPartial(results))
 }
 
 // SplitsPartial serves the splits as an HTML partial for HTMX
 func (h *Handler) SplitsPartial(c *gin.Context) {
 	classID, err := strconv.Atoi(c.Param("classId"))
 	if err != nil {
-		c.HTML(http.StatusBadRequest, "error-partial", gin.H{
-			"Error": "Invalid class ID",
-		})
+		renderTempl(c, http.StatusBadRequest, templates.ErrorPartial("Invalid class ID"))
 		return
 	}
 
 	splits, err := h.service.GetSplits(classID)
 	if err != nil {
-		c.HTML(http.StatusInternalServerError, "error-partial", gin.H{
-			"Error": err.Error(),
-		})
+		renderTempl(c, http.StatusInternalServerError, templates.ErrorPartial(err.Error()))
 		return
 	}
 
-	c.HTML(http.StatusOK, "splits-partial", gin.H{
-		"Splits": splits,
-	})
+	renderTempl(c, http.StatusOK, templates.SplitsPartial(*splits))
 }
