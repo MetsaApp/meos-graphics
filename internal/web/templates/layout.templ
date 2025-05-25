@@ -1,5 +1,7 @@
 package templates
 
+import "strconv"
+
 templ layout(title string, simulationEnabled bool) {
 	<!DOCTYPE html>
 	<html lang="en" class="h-full">
@@ -39,15 +41,20 @@ templ layout(title string, simulationEnabled bool) {
 					{ children... }
 				</main>
 			</div>
-			@sseScript(simulationEnabled)
+			<div id="app-config" data-simulation-enabled={ strconv.FormatBool(simulationEnabled) } style="display:none"></div>
+			@sseScript()
 		</body>
 	</html>
 }
 
-templ sseScript(simulationEnabled bool) {
+templ sseScript() {
 	<script>
+		// Get configuration from data attributes
+		const config = document.getElementById('app-config');
+		const simulationEnabled = config ? config.dataset.simulationEnabled === 'true' : false;
+		
 		// Initialize SSE connection
-		document.addEventListener('DOMContentLoaded', function() {
+	document.addEventListener('DOMContentLoaded', function() {
 			const evtSource = new EventSource('/sse');
 			
 			evtSource.onopen = function() {
@@ -78,7 +85,7 @@ templ sseScript(simulationEnabled bool) {
 				console.log('Heartbeat:', e.data);
 			});
 			
-			if simulationEnabled {
+			if (simulationEnabled) {
 				// Update simulation status
 				function updateSimulationStatus() {
 					fetch('/simulation/status')
