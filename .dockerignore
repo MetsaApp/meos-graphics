@@ -15,6 +15,16 @@ release-please-config.json
 # Build artifacts
 dist/
 meos-graphics
+bin/
+*.exe
+
+# Generated files (will be generated fresh in Docker)
+*_templ.go
+web/static/css/styles.css
+
+# Node modules (will be installed fresh in Docker)
+node_modules/
+package-lock.json
 
 # Logs
 logs/
