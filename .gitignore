@@ -39,6 +39,7 @@ bin/
 
 # Generated files
 *_templ.go
+*_templ.txt
 web/static/css/styles.css
 
 # Node modules
