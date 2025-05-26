@@ -2,13 +2,8 @@ package templates
 
 import (
 	"meos-graphics/internal/service"
-	"time"
 	"fmt"
 )
-
-func formatTime(t time.Time) string {
-	return t.Format("15:04:05")
-}
 
 func formatDuration(d *string) string {
 	if d == nil {
@@ -29,7 +24,6 @@ templ StartListPartial(startList []service.StartListEntry) {
 					<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
 					<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Club</th>
 					<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Start Time</th>
-					<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Card</th>
 				</tr>
 			</thead>
 			<tbody class="bg-white divide-y divide-gray-200">
@@ -37,14 +31,7 @@ templ StartListPartial(startList []service.StartListEntry) {
 					<tr>
 						<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{ competitor.Name }</td>
 						<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{ competitor.Club }</td>
-						<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{ formatTime(competitor.StartTime) }</td>
-						<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-							if competitor.Card != 0 {
-								{ fmt.Sprint(competitor.Card) }
-							} else {
-								-
-							}
-						</td>
+						<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{ competitor.StartTime }</td>
 					</tr>
 				}
 			</tbody>
@@ -83,14 +70,14 @@ templ ResultsPartial(results []service.ResultEntry) {
 						<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{ result.Name }</td>
 						<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{ result.Club }</td>
 						<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-							if hasValue(result.Time) {
-								{ formatDuration(result.Time) }
+							if result.RunningTime != "" {
+								{ result.RunningTime }
 							} else {
 								-
 							}
 						</td>
 						<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-							{ formatDuration(result.TimeDifference) }
+							{ result.Difference }
 						</td>
 						<td class="px-6 py-4 whitespace-nowrap text-sm">
 							<span class={ "inline-flex rounded-full px-2 text-xs font-semibold leading-5", getStatusBadgeClass(result.Status) }>
