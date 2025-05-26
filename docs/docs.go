@@ -222,27 +222,14 @@ const docTemplate = `{
                 }
             }
         },
-        "meos-graphics_internal_service.RadioTime": {
-            "type": "object",
-            "properties": {
-                "controlName": {
-                    "type": "string"
-                },
-                "elapsedTime": {
-                    "type": "string"
-                },
-                "splitTime": {
-                    "type": "string"
-                }
-            }
-        },
         "meos-graphics_internal_service.ResultEntry": {
             "type": "object",
             "properties": {
                 "club": {
                     "type": "string"
                 },
-                "finishTime": {
+                "difference": {
+                    "description": "Formatted duration from leader",
                     "type": "string"
                 },
                 "name": {
@@ -251,22 +238,11 @@ const docTemplate = `{
                 "position": {
                     "type": "integer"
                 },
-                "radioTimes": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/meos-graphics_internal_service.RadioTime"
-                    }
-                },
-                "startTime": {
+                "runningTime": {
+                    "description": "Formatted duration string",
                     "type": "string"
                 },
                 "status": {
-                    "type": "string"
-                },
-                "time": {
-                    "type": "string"
-                },
-                "timeDifference": {
                     "type": "string"
                 }
             }
@@ -303,12 +279,6 @@ const docTemplate = `{
                 "position": {
                     "type": "integer"
                 },
-                "splitTime": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
                 "timeDifference": {
                     "type": "string"
                 }
@@ -331,19 +301,14 @@ const docTemplate = `{
         "meos-graphics_internal_service.StartListEntry": {
             "type": "object",
             "properties": {
-                "card": {
-                    "type": "integer"
-                },
                 "club": {
                     "type": "string"
                 },
                 "name": {
                     "type": "string"
                 },
-                "startNumber": {
-                    "type": "integer"
-                },
                 "startTime": {
+                    "description": "Formatted as HH:mm",
                     "type": "string"
                 }
             }

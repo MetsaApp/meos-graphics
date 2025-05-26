@@ -9,36 +9,21 @@ definitions:
       orderKey:
         type: integer
     type: object
-  meos-graphics_internal_service.RadioTime:
-    properties:
-      controlName:
-        type: string
-      elapsedTime:
-        type: string
-      splitTime:
-        type: string
-    type: object
   meos-graphics_internal_service.ResultEntry:
     properties:
       club:
         type: string
-      finishTime:
+      difference:
+        description: Formatted duration from leader
         type: string
       name:
         type: string
       position:
         type: integer
-      radioTimes:
-        items:
-          $ref: '#/definitions/meos-graphics_internal_service.RadioTime'
-        type: array
-      startTime:
+      runningTime:
+        description: Formatted duration string
         type: string
       status:
-        type: string
-      time:
-        type: string
-      timeDifference:
         type: string
     type: object
   meos-graphics_internal_service.SplitStanding:
@@ -62,10 +47,6 @@ definitions:
         type: string
       position:
         type: integer
-      splitTime:
-        type: string
-      status:
-        type: string
       timeDifference:
         type: string
     type: object
@@ -80,15 +61,12 @@ definitions:
     type: object
   meos-graphics_internal_service.StartListEntry:
     properties:
-      card:
-        type: integer
       club:
         type: string
       name:
         type: string
-      startNumber:
-        type: integer
       startTime:
+        description: Formatted as HH:mm
         type: string
     type: object
 host: localhost:8090
