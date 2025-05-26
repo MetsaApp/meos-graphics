@@ -159,13 +159,17 @@ func (s *Service) GetResults(classID int) ([]ResultEntry, error) {
 		}
 	}
 
-	// Sort finished competitors by time
+	// Sort finished competitors by time, then by name for ties
 	sort.Slice(finishedCompetitors, func(i, j int) bool {
 		if finishedCompetitors[i].FinishTime == nil || finishedCompetitors[j].FinishTime == nil {
 			return false
 		}
 		timeI := finishedCompetitors[i].FinishTime.Sub(finishedCompetitors[i].StartTime)
 		timeJ := finishedCompetitors[j].FinishTime.Sub(finishedCompetitors[j].StartTime)
+		if timeI == timeJ {
+			// For tied times, sort alphabetically by name
+			return finishedCompetitors[i].Name < finishedCompetitors[j].Name
+		}
 		return timeI < timeJ
 	})
 
@@ -194,6 +198,16 @@ func (s *Service) GetResults(classID int) ([]ResultEntry, error) {
 			behind := runTime - winnerTime
 			behindStr := "+" + formatDuration(behind)
 			timeBehind = &behindStr
+		}
+
+		// Calculate position considering ties
+		if i > 0 {
+			prevRunTime := finishedCompetitors[i-1].FinishTime.Sub(finishedCompetitors[i-1].StartTime)
+			if runTime != prevRunTime {
+				// Not a tie, update position to current index + 1
+				position = i + 1
+			}
+			// If times are equal, keep the same position
 		}
 
 		// Build radio times
@@ -228,7 +242,6 @@ func (s *Service) GetResults(classID int) ([]ResultEntry, error) {
 			TimeDifference: timeBehind,
 			RadioTimes:     radioTimes,
 		})
-		position++
 	}
 
 	// Add DNF competitors
@@ -359,8 +372,12 @@ func (s *Service) GetSplits(classID int) (*SplitsResponse, error) {
 			}
 		}
 
-		// Sort by elapsed time
+		// Sort by elapsed time, then by name for ties
 		sort.Slice(splitEntries, func(i, j int) bool {
+			if splitEntries[i].elapsed == splitEntries[j].elapsed {
+				// For tied times, sort alphabetically by name
+				return splitEntries[i].competitor.Name < splitEntries[j].competitor.Name
+			}
 			return splitEntries[i].elapsed < splitEntries[j].elapsed
 		})
 
@@ -380,6 +397,15 @@ func (s *Service) GetSplits(classID int) (*SplitsResponse, error) {
 				timeBehind = &behindStr
 			}
 
+			// Calculate position considering ties
+			if i > 0 {
+				if entry.elapsed != splitEntries[i-1].elapsed {
+					// Not a tie, update position to current index + 1
+					position = i + 1
+				}
+				// If times are equal, keep the same position
+			}
+
 			standing.Standings = append(standing.Standings, SplitTime{
 				Position:       position,
 				Name:           entry.competitor.Name,
@@ -389,7 +415,6 @@ func (s *Service) GetSplits(classID int) (*SplitsResponse, error) {
 				TimeDifference: timeBehind,
 				Status:         "OK",
 			})
-			position++
 		}
 
 		// Add competitors without this split (but not for finish)
