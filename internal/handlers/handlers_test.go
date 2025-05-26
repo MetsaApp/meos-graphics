@@ -159,16 +159,14 @@ func TestHandler_GetStartList(t *testing.T) {
 		t.Errorf("Number of start list entries = %d, want 3", len(startList))
 	}
 
-	// Verify sorting by start time and start numbers
+	// Verify sorting by start time
 	if len(startList) >= 3 {
 		if startList[0].Name != "John Doe" {
 			t.Errorf("First starter = %q, want %q", startList[0].Name, "John Doe")
 		}
-		if startList[0].StartNumber != 1 {
-			t.Errorf("First start number = %d, want 1", startList[0].StartNumber)
-		}
-		if startList[2].StartNumber != 3 {
-			t.Errorf("Last start number = %d, want 3", startList[2].StartNumber)
+		// Check start time formatting
+		if startList[0].StartTime != "11:00" {
+			t.Errorf("First start time = %q, want %q", startList[0].StartTime, "11:00")
 		}
 	}
 }
@@ -268,16 +266,11 @@ func TestHandler_GetResults(t *testing.T) {
 		if results[0].Name != "John Doe" {
 			t.Errorf("First place name = %q, want %q", results[0].Name, "John Doe")
 		}
-		if results[0].Time == nil {
-			t.Error("First place time should not be nil")
-		} else if *results[0].Time != "1:23.4" {
-			t.Errorf("First place time = %q, want %q", *results[0].Time, "1:23.4")
+		if results[0].RunningTime != "1:23.4" {
+			t.Errorf("First place time = %q, want %q", results[0].RunningTime, "1:23.4")
 		}
-		if results[0].TimeDifference != nil {
+		if results[0].Difference != "" {
 			t.Error("First place should not have time difference")
-		}
-		if len(results[0].RadioTimes) != 2 {
-			t.Errorf("First place radio times = %d, want 2", len(results[0].RadioTimes))
 		}
 	}
 
@@ -286,10 +279,8 @@ func TestHandler_GetResults(t *testing.T) {
 		if results[1].Position != 2 {
 			t.Errorf("Second position = %d, want 2", results[1].Position)
 		}
-		if results[1].TimeDifference == nil {
-			t.Error("Second place time difference should not be nil")
-		} else if *results[1].TimeDifference != "+0:07.8" {
-			t.Errorf("Second place time difference = %q, want %q", *results[1].TimeDifference, "+0:07.8")
+		if results[1].Difference != "+0:07.8" {
+			t.Errorf("Second place time difference = %q, want %q", results[1].Difference, "+0:07.8")
 		}
 	}
 
@@ -304,8 +295,8 @@ func TestHandler_GetResults(t *testing.T) {
 			if result.Position != 0 {
 				t.Error("DNF should not have position")
 			}
-			if result.Time != nil {
-				t.Error("DNF should not have time")
+			if result.RunningTime != "" {
+				t.Error("DNF should not have running time")
 			}
 		case "MP":
 			mpFound = true
@@ -519,37 +510,8 @@ func TestHandler_RadioTimeCalculation(t *testing.T) {
 		t.Fatalf("Expected 1 result, got %d", len(results))
 	}
 
-	radioTimes := results[0].RadioTimes
-	if len(radioTimes) != 3 {
-		t.Fatalf("Expected 3 radio times, got %d", len(radioTimes))
-	}
-
-	// Check split times calculation
-	expectedSplits := []struct {
-		control     string
-		elapsedTime string
-		splitTime   string
-	}{
-		{"Control 1", "0:30.2", "0:30.2"},
-		{"Control 2", "0:58.4", "0:28.2"},
-		{"Control 3", "1:32.3", "0:33.9"},
-	}
-
-	for i, expected := range expectedSplits {
-		if i >= len(radioTimes) {
-			break
-		}
-		rt := radioTimes[i]
-		if rt.ControlName != expected.control {
-			t.Errorf("Radio time %d control = %q, want %q", i, rt.ControlName, expected.control)
-		}
-		if rt.ElapsedTime != expected.elapsedTime {
-			t.Errorf("Radio time %d elapsed = %q, want %q", i, rt.ElapsedTime, expected.elapsedTime)
-		}
-		if rt.SplitTime != expected.splitTime {
-			t.Errorf("Radio time %d split = %q, want %q", i, rt.SplitTime, expected.splitTime)
-		}
-	}
+	// Radio times are no longer included in results endpoint
+	// as per the API cleanup requirement
 }
 
 func TestHandler_ConcurrentRequests(t *testing.T) {

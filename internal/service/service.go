@@ -30,42 +30,28 @@ type ClassInfo struct {
 
 // StartListEntry represents an entry in the start list
 type StartListEntry struct {
-	StartNumber int       `json:"startNumber"`
-	Name        string    `json:"name"`
-	Club        string    `json:"club"`
-	StartTime   time.Time `json:"startTime"`
-	Card        int       `json:"card"`
-}
-
-// RadioTime represents a radio control passing time
-type RadioTime struct {
-	ControlName string `json:"controlName"`
-	ElapsedTime string `json:"elapsedTime"`
-	SplitTime   string `json:"splitTime"`
+	Name      string `json:"name"`
+	Club      string `json:"club"`
+	StartTime string `json:"startTime"` // Formatted as HH:mm
 }
 
 // ResultEntry represents a competitor's result
 type ResultEntry struct {
-	Position       int         `json:"position,omitempty"`
-	Name           string      `json:"name"`
-	Club           string      `json:"club"`
-	StartTime      time.Time   `json:"startTime"`
-	FinishTime     *time.Time  `json:"finishTime,omitempty"`
-	Time           *string     `json:"time,omitempty"`
-	Status         string      `json:"status"`
-	TimeDifference *string     `json:"timeDifference,omitempty"`
-	RadioTimes     []RadioTime `json:"radioTimes,omitempty"`
+	Name        string `json:"name"`
+	Club        string `json:"club"`
+	Status      string `json:"status"`
+	RunningTime string `json:"runningTime,omitempty"` // Formatted duration string
+	Position    int    `json:"position,omitempty"`
+	Difference  string `json:"difference,omitempty"` // Formatted duration from leader
 }
 
 // SplitTime represents a split time at a control
 type SplitTime struct {
-	Position       int        `json:"position,omitempty"`
-	Name           string     `json:"name"`
-	Club           string     `json:"club"`
-	SplitTime      *time.Time `json:"splitTime,omitempty"`
-	ElapsedTime    *string    `json:"elapsedTime,omitempty"`
-	TimeDifference *string    `json:"timeDifference,omitempty"`
-	Status         string     `json:"status"`
+	Position       int     `json:"position,omitempty"`
+	Name           string  `json:"name"`
+	Club           string  `json:"club"`
+	ElapsedTime    *string `json:"elapsedTime,omitempty"`
+	TimeDifference *string `json:"timeDifference,omitempty"`
 }
 
 // SplitStanding represents standings at a control
@@ -115,13 +101,11 @@ func (s *Service) GetStartList(classID int) ([]StartListEntry, error) {
 	})
 
 	var startList []StartListEntry
-	for i, comp := range competitors {
+	for _, comp := range competitors {
 		startList = append(startList, StartListEntry{
-			StartNumber: i + 1,
-			Name:        comp.Name,
-			Club:        comp.Club.Name,
-			StartTime:   comp.StartTime,
-			Card:        comp.Card,
+			Name:      comp.Name,
+			Club:      comp.Club.Name,
+			StartTime: comp.StartTime.Format("15:04"),
 		})
 	}
 
@@ -177,16 +161,6 @@ func (s *Service) GetResults(classID int) ([]ResultEntry, error) {
 	position := 1
 	var winnerTime time.Duration
 
-	// Get class radio controls
-	var radioControls []models.Control
-	classes := s.state.GetClasses()
-	for _, class := range classes {
-		if class.ID == classID {
-			radioControls = class.RadioControls
-			break
-		}
-	}
-
 	for i, comp := range finishedCompetitors {
 		runTime := comp.FinishTime.Sub(comp.StartTime)
 		timeStr := formatDuration(runTime)
@@ -210,38 +184,17 @@ func (s *Service) GetResults(classID int) ([]ResultEntry, error) {
 			// If times are equal, keep the same position
 		}
 
-		// Build radio times
-		var radioTimes []RadioTime
-		var prevTime time.Duration
-
-		for _, rc := range radioControls {
-			for _, split := range comp.Splits {
-				if split.Control.ID != rc.ID {
-					continue
-				}
-				elapsed := split.PassingTime.Sub(comp.StartTime)
-				splitTime := elapsed - prevTime
-				radioTimes = append(radioTimes, RadioTime{
-					ControlName: split.Control.Name,
-					ElapsedTime: formatDuration(elapsed),
-					SplitTime:   formatDuration(splitTime),
-				})
-				prevTime = elapsed
-				break
-			}
+		result := ResultEntry{
+			Name:        comp.Name,
+			Club:        comp.Club.Name,
+			Status:      "OK",
+			RunningTime: timeStr,
+			Position:    position,
 		}
-
-		results = append(results, ResultEntry{
-			Position:       position,
-			Name:           comp.Name,
-			Club:           comp.Club.Name,
-			StartTime:      comp.StartTime,
-			FinishTime:     comp.FinishTime,
-			Time:           &timeStr,
-			Status:         "OK",
-			TimeDifference: timeBehind,
-			RadioTimes:     radioTimes,
-		})
+		if timeBehind != nil {
+			result.Difference = *timeBehind
+		}
+		results = append(results, result)
 	}
 
 	// Add DNF competitors
@@ -251,10 +204,9 @@ func (s *Service) GetResults(classID int) ([]ResultEntry, error) {
 			status = "MP" // Mispunch
 		}
 		results = append(results, ResultEntry{
-			Name:      comp.Name,
-			Club:      comp.Club.Name,
-			StartTime: comp.StartTime,
-			Status:    status,
+			Name:   comp.Name,
+			Club:   comp.Club.Name,
+			Status: status,
 		})
 	}
 
@@ -264,30 +216,27 @@ func (s *Service) GetResults(classID int) ([]ResultEntry, error) {
 	})
 	for _, comp := range runningCompetitors {
 		results = append(results, ResultEntry{
-			Name:      comp.Name,
-			Club:      comp.Club.Name,
-			StartTime: comp.StartTime,
-			Status:    "Running",
+			Name:   comp.Name,
+			Club:   comp.Club.Name,
+			Status: "Running",
 		})
 	}
 
 	// Add waiting competitors (not yet started)
 	for _, comp := range waitingCompetitors {
 		results = append(results, ResultEntry{
-			Name:      comp.Name,
-			Club:      comp.Club.Name,
-			StartTime: comp.StartTime,
-			Status:    "Waiting",
+			Name:   comp.Name,
+			Club:   comp.Club.Name,
+			Status: "Waiting",
 		})
 	}
 
 	// Add DNS competitors (Did Not Start - set by organizers)
 	for _, comp := range dnsCompetitors {
 		results = append(results, ResultEntry{
-			Name:      comp.Name,
-			Club:      comp.Club.Name,
-			StartTime: comp.StartTime,
-			Status:    "DNS",
+			Name:   comp.Name,
+			Club:   comp.Club.Name,
+			Status: "DNS",
 		})
 	}
 
@@ -410,10 +359,8 @@ func (s *Service) GetSplits(classID int) (*SplitsResponse, error) {
 				Position:       position,
 				Name:           entry.competitor.Name,
 				Club:           entry.competitor.Club.Name,
-				SplitTime:      entry.splitTime,
 				ElapsedTime:    &elapsedStr,
 				TimeDifference: timeBehind,
-				Status:         "OK",
 			})
 		}
 
@@ -430,9 +377,8 @@ func (s *Service) GetSplits(classID int) (*SplitsResponse, error) {
 					}
 					if !found {
 						standing.Standings = append(standing.Standings, SplitTime{
-							Name:   comp.Name,
-							Club:   comp.Club.Name,
-							Status: "DNF",
+							Name: comp.Name,
+							Club: comp.Club.Name,
 						})
 					}
 				}
