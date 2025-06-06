@@ -164,7 +164,10 @@ Releases are fully automated via GitHub Actions:
 
 1. **release-please** monitors `main` branch
 2. Creates/updates a release PR when changes detected
-3. When release PR is merged:
+3. The release PR will automatically update version strings in:
+   - `internal/version/version.go` - Go constant
+   - `cmd/meos-graphics/main.go` - Swagger @version annotation
+4. When release PR is merged:
    - Creates GitHub release with changelog
    - Builds binaries for all platforms
    - Publishes Docker images to ghcr.io
