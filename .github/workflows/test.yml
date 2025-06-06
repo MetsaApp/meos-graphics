@@ -46,7 +46,10 @@ jobs:
     
     - name: Check Swagger documentation is up-to-date
       run: |
+        # Create a dummy go file to help swag find the module name
+        echo "package main" > doc.go
         swag init -g cmd/meos-graphics/main.go --parseDependency --parseInternal
+        rm doc.go
         ./scripts/validate-swagger.sh
         git diff --exit-code docs/swagger.json docs/swagger.yaml docs/docs.go || \
           (echo "Swagger documentation is out of date. Run 'swag init -g cmd/meos-graphics/main.go' and commit the changes." && exit 1)
