@@ -27,12 +27,18 @@ jobs:
         if: ${{ steps.release.outputs.release_created }}
         uses: actions/setup-go@v5
         with:
-          go-version: '1.21'
+          go-version: '1.23'
+          
+      - name: Install templ
+        if: ${{ steps.release.outputs.release_created }}
+        run: go install github.com/a-h/templ/cmd/templ@latest
           
       - name: Build
         if: ${{ steps.release.outputs.release_created }}
         run: |
           go mod download
+          templ generate
+          mkdir -p dist
           GOOS=linux GOARCH=amd64 go build -o dist/meos-graphics-linux-amd64 ./cmd/meos-graphics
           GOOS=windows GOARCH=amd64 go build -o dist/meos-graphics-windows-amd64.exe ./cmd/meos-graphics
           GOOS=darwin GOARCH=amd64 go build -o dist/meos-graphics-darwin-amd64 ./cmd/meos-graphics
