@@ -60,5 +60,4 @@ dev:
 	air
 
 # Full build - templ, CSS, swagger, and Go binary
-full-build: templ css swagger
-	go build -o bin/meos-graphics ./cmd/meos-graphics
+full-build: templ css swagger build
