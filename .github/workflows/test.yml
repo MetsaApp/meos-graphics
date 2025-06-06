@@ -15,10 +15,10 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v5
       with:
-        go-version: '1.21'
+        go-version: '1.23'
     
     - name: Install templ
-      run: go install github.com/a-h/templ/cmd/templ@latest
+      run: go install github.com/a-h/templ/cmd/templ@v0.3.865
     
     - name: Generate templ files
       run: templ generate
