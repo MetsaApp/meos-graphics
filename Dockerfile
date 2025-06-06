@@ -1,11 +1,12 @@
 # Build stage
-FROM golang:1.21-alpine AS builder
+FROM golang:1.23-alpine AS builder
 
 # Install build dependencies including Node.js for Tailwind CSS
 RUN apk add --no-cache git nodejs npm
 
-# Install templ
-RUN go install github.com/a-h/templ/cmd/templ@latest
+# Install templ and swag
+RUN go install github.com/a-h/templ/cmd/templ@v0.3.865 && \
+    go install github.com/swaggo/swag/cmd/swag@v1.16.4
 
 # Set working directory
 WORKDIR /app
@@ -31,6 +32,11 @@ RUN templ generate
 
 # Build CSS with Tailwind
 RUN npm run build-css
+
+# Generate swagger docs
+RUN echo "package main" > doc.go && \
+    swag init -g cmd/meos-graphics/main.go --parseDependency --parseInternal && \
+    rm doc.go
 
 # Build the application
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o meos-graphics ./cmd/meos-graphics
