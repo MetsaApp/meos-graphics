@@ -43,7 +43,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/meos-graphics_internal_service.ClassInfo"
+                                "$ref": "#/definitions/service.ClassInfo"
                             }
                         }
                     }
@@ -78,7 +78,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/meos-graphics_internal_service.ResultEntry"
+                                "$ref": "#/definitions/service.ResultEntry"
                             }
                         }
                     },
@@ -129,7 +129,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/meos-graphics_internal_service.SplitsResponse"
+                            "$ref": "#/definitions/service.SplitsResponse"
                         }
                     },
                     "400": {
@@ -181,7 +181,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/meos-graphics_internal_service.StartListEntry"
+                                "$ref": "#/definitions/service.StartListEntry"
                             }
                         }
                     },
@@ -208,7 +208,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "meos-graphics_internal_service.ClassInfo": {
+        "service.ClassInfo": {
             "type": "object",
             "properties": {
                 "id": {
@@ -222,7 +222,7 @@ const docTemplate = `{
                 }
             }
         },
-        "meos-graphics_internal_service.ResultEntry": {
+        "service.ResultEntry": {
             "type": "object",
             "properties": {
                 "club": {
@@ -247,7 +247,7 @@ const docTemplate = `{
                 }
             }
         },
-        "meos-graphics_internal_service.SplitStanding": {
+        "service.SplitStanding": {
             "type": "object",
             "properties": {
                 "controlId": {
@@ -259,12 +259,12 @@ const docTemplate = `{
                 "standings": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/meos-graphics_internal_service.SplitTime"
+                        "$ref": "#/definitions/service.SplitTime"
                     }
                 }
             }
         },
-        "meos-graphics_internal_service.SplitTime": {
+        "service.SplitTime": {
             "type": "object",
             "properties": {
                 "club": {
@@ -284,7 +284,7 @@ const docTemplate = `{
                 }
             }
         },
-        "meos-graphics_internal_service.SplitsResponse": {
+        "service.SplitsResponse": {
             "type": "object",
             "properties": {
                 "className": {
@@ -293,12 +293,12 @@ const docTemplate = `{
                 "splits": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/meos-graphics_internal_service.SplitStanding"
+                        "$ref": "#/definitions/service.SplitStanding"
                     }
                 }
             }
         },
-        "meos-graphics_internal_service.StartListEntry": {
+        "service.StartListEntry": {
             "type": "object",
             "properties": {
                 "club": {
@@ -318,7 +318,7 @@ const docTemplate = `{
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "0.0.0 x-release-please-version",
+	Version:          "1.0.0 x-release-please-version",
 	Host:             "localhost:8090",
 	BasePath:         "/",
 	Schemes:          []string{"http", "https"},
