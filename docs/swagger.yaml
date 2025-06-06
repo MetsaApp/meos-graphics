@@ -81,7 +81,7 @@ info:
     url: https://opensource.org/licenses/MIT
   termsOfService: http://swagger.io/terms/
   title: meos-graphics
-  version: 1.0.0 x-release-please-version
+  version: 1.0.1 x-release-please-version
 paths:
   /classes:
     get:

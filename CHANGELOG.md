@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.0.1](https://github.com/MetsaApp/meos-graphics/compare/v1.0.0...v1.0.1) (2025-06-06)
+
+
+### Bug Fixes
+
+* add templ generation to release workflow and update version to 1.0.0 ([#38](https://github.com/MetsaApp/meos-graphics/issues/38)) ([ac0eb5e](https://github.com/MetsaApp/meos-graphics/commit/ac0eb5e5e457084b7beae453e88844cde1f4cb09))
+* update release-please configuration for Go version updates ([#40](https://github.com/MetsaApp/meos-graphics/issues/40)) ([4a3a762](https://github.com/MetsaApp/meos-graphics/commit/4a3a76216215805b482f58f6baf7af38dbc4a163))
+* use generic type with glob pattern for version.go updates ([#43](https://github.com/MetsaApp/meos-graphics/issues/43)) ([3808d45](https://github.com/MetsaApp/meos-graphics/commit/3808d457c0037ebe9f9d9985295393a9d02073fa))
+
 ## 1.0.0 (2025-05-26)
 
 
