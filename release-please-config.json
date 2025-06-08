@@ -19,10 +19,6 @@
         {
           "type": "generic",
           "path": "docs/docs.go"
-        },
-        {
-          "type": "generic",
-          "path": "docs/swagger.yaml"
         }
       ]
     }
