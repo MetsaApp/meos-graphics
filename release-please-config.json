@@ -15,10 +15,6 @@
         {
           "type": "generic",
           "path": "cmd/meos-graphics/main.go"
-        },
-        {
-          "type": "generic",
-          "path": "docs/docs.go"
         }
       ]
     }
