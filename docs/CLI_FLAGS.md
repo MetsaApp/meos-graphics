@@ -65,6 +65,12 @@ meos-graphics [flags]
 - **Default**: 3m0s
 - **Description**: Duration of start list phase (only with --simulation)
 
+### --swagger-host
+
+- **Type**: string
+- **Default**: "localhost:8090"
+- **Description**: Hostname for Swagger documentation API calls
+
 ## Examples
 
 ### Run in simulation mode
