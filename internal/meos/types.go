@@ -13,7 +13,6 @@ type MOPComplete struct {
 	Controls       []MOPControl    `xml:"ctrl"`
 	Classes        []MOPClass      `xml:"cls"`
 	Organizations  []MOPOrg        `xml:"org"`
-	Teams          []MOPTeam       `xml:"tm"`
 	Competitors    []MOPCompetitor `xml:"cmp"`
 }
 
@@ -24,7 +23,6 @@ type MOPDiff struct {
 	Controls       []MOPControl    `xml:"ctrl"`
 	Classes        []MOPClass      `xml:"cls"`
 	Organizations  []MOPOrg        `xml:"org"`
-	Teams          []MOPTeam       `xml:"tm"`
 	Competitors    []MOPCompetitor `xml:"cmp"`
 }
 
@@ -32,7 +30,6 @@ type MOPCompetition struct {
 	XMLName   xml.Name `xml:"competition"`
 	Date      string   `xml:"date,attr"`
 	Organizer string   `xml:"organizer,attr"`
-	Homepage  string   `xml:"homepage,attr"`
 	ZeroTime  string   `xml:"zerotime,attr"`
 	Name      string   `xml:",chardata"`
 }
@@ -58,13 +55,6 @@ type MOPOrg struct {
 	Name        string   `xml:",chardata"`
 }
 
-type MOPTeam struct {
-	XMLName xml.Name `xml:"tm"`
-	ID      string   `xml:"id,attr"`
-	Base    MOPBase
-	Results string `xml:"r"`
-}
-
 type MOPBase struct {
 	XMLName     xml.Name `xml:"base"`
 	Org         string   `xml:"org,attr"`
@@ -72,7 +62,6 @@ type MOPBase struct {
 	Status      string   `xml:"stat,attr"`
 	StartTime   string   `xml:"st,attr"`
 	RunningTime string   `xml:"rt,attr"`
-	Bib         string   `xml:"bib,attr"`
 	Text        string   `xml:",chardata"`
 }
 
@@ -82,13 +71,6 @@ type MOPCompetitor struct {
 	Card    string   `xml:"card,attr"`
 	Base    MOPBase
 	Radio   string `xml:"radio"`
-	Input   MOPInput
-}
-
-type MOPInput struct {
-	XMLName    xml.Name `xml:"input"`
-	InputTime  string   `xml:"it,attr"`
-	TimeStatus string   `xml:"tstat,attr"`
 }
 
 func (c *MOPCompetitor) StartTime() int {
