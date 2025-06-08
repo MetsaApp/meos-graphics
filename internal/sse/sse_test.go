@@ -140,6 +140,9 @@ func TestSSESimulationIntegration(t *testing.T) {
 		1*time.Second,        // Running phase
 		500*time.Millisecond, // Results phase
 		false,                // Mass start
+		3,                    // numClasses
+		20,                   // runnersPerClass
+		3,                    // radioControls
 	)
 
 	// Initialize simulation data

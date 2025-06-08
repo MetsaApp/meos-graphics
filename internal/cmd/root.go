@@ -20,6 +20,11 @@ var (
 	SimulationPhaseRunning time.Duration
 	SimulationPhaseResults time.Duration
 	SimulationMassStart    bool
+
+	// Simulation content configuration
+	SimulationNumClasses      int
+	SimulationRunnersPerClass int
+	SimulationRadioControls   int
 )
 
 // NewRootCommand creates and returns the root cobra command
@@ -48,6 +53,11 @@ The server can run in two modes:
 	rootCmd.Flags().DurationVar(&SimulationPhaseRunning, "simulation-phase-running", 7*time.Minute, "Duration of running phase (only with --simulation)")
 	rootCmd.Flags().DurationVar(&SimulationPhaseResults, "simulation-phase-results", 5*time.Minute, "Duration of results phase (only with --simulation)")
 	rootCmd.Flags().BoolVar(&SimulationMassStart, "simulation-mass-start", false, "Use mass start instead of staggered starts (only with --simulation)")
+
+	// Simulation content flags
+	rootCmd.Flags().IntVar(&SimulationNumClasses, "simulation-classes", 3, "Number of competition classes to generate (only with --simulation)")
+	rootCmd.Flags().IntVar(&SimulationRunnersPerClass, "simulation-runners", 20, "Number of competitors per class (only with --simulation)")
+	rootCmd.Flags().IntVar(&SimulationRadioControls, "simulation-controls", 3, "Number of radio controls per class (only with --simulation)")
 
 	return rootCmd
 }

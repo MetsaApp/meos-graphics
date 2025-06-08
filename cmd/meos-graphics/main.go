@@ -65,7 +65,7 @@ func run(_ *cobra.Command, _ []string) error {
 		return fmt.Errorf("poll interval too large (maximum 1 hour): %s", cmd.PollInterval)
 	}
 
-	// Check if simulation timing flags are used without simulation mode
+	// Check if simulation flags are used without simulation mode
 	if !cmd.SimulationMode {
 		// Check if any non-default simulation timing values are set
 		defaultDuration := 15 * time.Minute
@@ -78,6 +78,13 @@ func run(_ *cobra.Command, _ []string) error {
 			cmd.SimulationPhaseRunning != defaultPhaseRunning ||
 			cmd.SimulationPhaseResults != defaultPhaseResults {
 			return fmt.Errorf("simulation timing flags can only be used with --simulation mode")
+		}
+
+		// Check if any non-default simulation content values are set
+		if cmd.SimulationNumClasses != 3 ||
+			cmd.SimulationRunnersPerClass != 20 ||
+			cmd.SimulationRadioControls != 3 {
+			return fmt.Errorf("simulation content flags can only be used with --simulation mode")
 		}
 	}
 
@@ -113,9 +120,22 @@ func run(_ *cobra.Command, _ []string) error {
 				phaseSum, cmd.SimulationDuration)
 		}
 
+		// Validate simulation content configuration
+		if cmd.SimulationNumClasses <= 0 {
+			return fmt.Errorf("simulation-classes must be positive: %d", cmd.SimulationNumClasses)
+		}
+		if cmd.SimulationRunnersPerClass <= 0 {
+			return fmt.Errorf("simulation-runners must be positive: %d", cmd.SimulationRunnersPerClass)
+		}
+		if cmd.SimulationRadioControls < 0 {
+			return fmt.Errorf("simulation-controls must be non-negative: %d", cmd.SimulationRadioControls)
+		}
+
 		logger.InfoLogger.Printf("Simulation timing: Total=%s, Start=%s, Running=%s, Results=%s, MassStart=%v",
 			cmd.SimulationDuration, cmd.SimulationPhaseStart, cmd.SimulationPhaseRunning, cmd.SimulationPhaseResults,
 			cmd.SimulationMassStart)
+		logger.InfoLogger.Printf("Simulation content: Classes=%d, Runners=%d, Controls=%d",
+			cmd.SimulationNumClasses, cmd.SimulationRunnersPerClass, cmd.SimulationRadioControls)
 	}
 
 	// Initialize global state
@@ -131,10 +151,10 @@ func run(_ *cobra.Command, _ []string) error {
 	var simulationAdapter *simulation.Adapter
 
 	if cmd.SimulationMode {
-		// Use simulation adapter with timing configuration
+		// Use simulation adapter with timing and content configuration
 		simulationAdapter = simulation.NewAdapter(appState, cmd.SimulationDuration,
 			cmd.SimulationPhaseStart, cmd.SimulationPhaseRunning, cmd.SimulationPhaseResults,
-			cmd.SimulationMassStart)
+			cmd.SimulationMassStart, cmd.SimulationNumClasses, cmd.SimulationRunnersPerClass, cmd.SimulationRadioControls)
 		adapter = simulationAdapter
 	} else {
 		// Configure MeOS adapter
@@ -273,9 +293,19 @@ func run(_ *cobra.Command, _ []string) error {
 
 	// Configure Swagger host dynamically
 	docs.SwaggerInfo.Host = cmd.SwaggerHost
-	
-	// Swagger documentation
-	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
+	// Swagger documentation with scheme detection
+	router.GET("/swagger/*any", func(c *gin.Context) {
+		// Detect if request is coming over HTTPS
+		if c.Request.TLS != nil || c.GetHeader("X-Forwarded-Proto") == "https" {
+			// Prioritize HTTPS when accessed over HTTPS
+			docs.SwaggerInfo.Schemes = []string{"https", "http"}
+		} else {
+			// Default to HTTP first for local development
+			docs.SwaggerInfo.Schemes = []string{"http", "https"}
+		}
+		ginSwagger.WrapHandler(swaggerFiles.Handler)(c)
+	})
 
 	// API documentation redirect
 	router.GET("/docs", func(c *gin.Context) {
