@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/MetsaApp/meos-graphics/compare/v1.1.0...v1.2.0) (2025-06-08)
+
+
+### Features
+
+* add configurable simulation parameters ([#54](https://github.com/MetsaApp/meos-graphics/issues/54)) ([f36a344](https://github.com/MetsaApp/meos-graphics/commit/f36a3449a7970456b0998904e4928ad92b60d829))
+
 ## [1.1.0](https://github.com/MetsaApp/meos-graphics/compare/v1.0.3...v1.1.0) (2025-06-08)
 
 
