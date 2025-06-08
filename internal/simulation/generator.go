@@ -313,7 +313,20 @@ func (g *Generator) generateCompetitorTiming(competitorID int, class models.Clas
 
 		// For test consistency, ensure minimum 5 minutes if phase allows it
 		if g.phaseRunning >= 7*time.Minute && totalTime < 5*time.Minute {
-			totalTime = 5*time.Minute + time.Duration(g.rnd.Intn(30))*time.Second
+			// Generate a more varied time around 5 minutes to avoid identical times
+			// But respect the max allowed time (90% of running phase)
+			baseVariation := g.rnd.Intn(40)    // 0-40 seconds
+			secondsVariation := g.rnd.Intn(20) // 0-20 additional seconds
+			newTime := 5*time.Minute + time.Duration(baseVariation)*time.Second + time.Duration(secondsVariation)*time.Second
+
+			// Ensure we don't exceed the maximum allowed time
+			if newTime <= maxRunningTime {
+				totalTime = newTime
+			} else {
+				// Fall back to a time within bounds but still varied
+				variation := g.rnd.Intn(30) // 0-30 seconds
+				totalTime = 5*time.Minute + time.Duration(variation)*time.Second
+			}
 		}
 
 		g.competitorTimings[competitorID] = competitorTiming{
@@ -617,8 +630,20 @@ func (g *Generator) updateCompetitorProgress(progress float64) {
 			// Additional check: ensure minimum run time for standard competitions
 			actualRunTime := cappedFinishTime.Sub(comp.StartTime)
 			if g.phaseRunning >= 7*time.Minute && actualRunTime < 5*time.Minute {
-				// For standard competitions, enforce 5 minute minimum
-				cappedFinishTime = comp.StartTime.Add(5*time.Minute + time.Duration(g.rnd.Intn(30))*time.Second)
+				// For standard competitions, enforce 5 minute minimum with better variation
+				// But respect the max allowed time (90% of running phase)
+				maxAllowedRunTime := time.Duration(float64(g.phaseRunning) * 0.9)
+				baseVariation := g.rnd.Intn(40)    // 0-40 seconds
+				secondsVariation := g.rnd.Intn(20) // 0-20 additional seconds
+				newRunTime := 5*time.Minute + time.Duration(baseVariation)*time.Second + time.Duration(secondsVariation)*time.Second
+
+				if newRunTime <= maxAllowedRunTime {
+					cappedFinishTime = comp.StartTime.Add(newRunTime)
+				} else {
+					// Fall back to a time within bounds but still varied
+					variation := g.rnd.Intn(30) // 0-30 seconds
+					cappedFinishTime = comp.StartTime.Add(5*time.Minute + time.Duration(variation)*time.Second)
+				}
 			}
 
 			comp.Status = "1" // Finished
