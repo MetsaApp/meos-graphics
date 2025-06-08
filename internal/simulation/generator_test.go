@@ -10,17 +10,26 @@ import (
 )
 
 func TestNewGenerator(t *testing.T) {
-	g := NewGenerator(15*time.Minute, 3*time.Minute, 7*time.Minute, 5*time.Minute, false)
+	g := NewGenerator(15*time.Minute, 3*time.Minute, 7*time.Minute, 5*time.Minute, false, 3, 20, 3)
 	if g == nil {
 		t.Fatal("NewGenerator returned nil")
 	}
 	if g.rnd == nil {
 		t.Error("Generator random source is nil")
 	}
+	if g.numClasses != 3 {
+		t.Errorf("numClasses = %d, want 3", g.numClasses)
+	}
+	if g.runnersPerClass != 20 {
+		t.Errorf("runnersPerClass = %d, want 20", g.runnersPerClass)
+	}
+	if g.radioControls != 3 {
+		t.Errorf("radioControls = %d, want 3", g.radioControls)
+	}
 }
 
 func TestGenerator_GenerateInitialData(t *testing.T) {
-	g := NewGenerator(15*time.Minute, 3*time.Minute, 7*time.Minute, 5*time.Minute, false)
+	g := NewGenerator(15*time.Minute, 3*time.Minute, 7*time.Minute, 5*time.Minute, false, 3, 20, 3)
 	baseTime := time.Date(2024, 1, 1, 10, 0, 0, 0, time.UTC)
 
 	event, controls, classes, clubs, competitors := g.GenerateInitialData(baseTime)
@@ -113,9 +122,10 @@ func TestGenerator_GenerateInitialData(t *testing.T) {
 		t.Error("No competitors generated")
 	}
 
-	// Should be roughly 15-25 per class * 3 classes = 45-75 total
-	if len(competitors) < 45 || len(competitors) > 75 {
-		t.Errorf("Number of competitors = %d, want between 45 and 75", len(competitors))
+	// Should be exactly 20 per class * 3 classes = 60 total
+	expectedTotal := g.numClasses * g.runnersPerClass
+	if len(competitors) != expectedTotal {
+		t.Errorf("Number of competitors = %d, want %d", len(competitors), expectedTotal)
 	}
 
 	// Verify all competitors start at base time + phase start (with staggered starts)
@@ -149,8 +159,8 @@ func TestGenerator_GenerateInitialData(t *testing.T) {
 		classCounts[comp.Class.ID]++
 	}
 	for classID, count := range classCounts {
-		if count < 15 || count > 25 {
-			t.Errorf("Class %d has %d competitors, want between 15 and 25", classID, count)
+		if count != g.runnersPerClass {
+			t.Errorf("Class %d has %d competitors, want %d", classID, count, g.runnersPerClass)
 		}
 	}
 }
@@ -198,7 +208,7 @@ func TestGenerator_DeterministicOutput(t *testing.T) {
 }
 
 func TestGenerator_PhaseTransitions(t *testing.T) {
-	g := NewGenerator(15*time.Minute, 3*time.Minute, 7*time.Minute, 5*time.Minute, false)
+	g := NewGenerator(15*time.Minute, 3*time.Minute, 7*time.Minute, 5*time.Minute, false, 3, 20, 3)
 	baseTime := time.Date(2024, 1, 1, 10, 0, 0, 0, time.UTC)
 
 	g.GenerateInitialData(baseTime)
@@ -327,7 +337,7 @@ func TestGenerator_PhaseTransitions(t *testing.T) {
 }
 
 func TestGenerator_SimulationReset(t *testing.T) {
-	g := NewGenerator(15*time.Minute, 3*time.Minute, 7*time.Minute, 5*time.Minute, false)
+	g := NewGenerator(15*time.Minute, 3*time.Minute, 7*time.Minute, 5*time.Minute, false, 3, 20, 3)
 	baseTime := time.Date(2024, 1, 1, 10, 0, 0, 0, time.UTC)
 
 	g.GenerateInitialData(baseTime)
@@ -366,7 +376,7 @@ func TestGenerator_SimulationReset(t *testing.T) {
 }
 
 func TestGenerator_TimeCalculations(t *testing.T) {
-	g := NewGenerator(15*time.Minute, 3*time.Minute, 7*time.Minute, 5*time.Minute, false)
+	g := NewGenerator(15*time.Minute, 3*time.Minute, 7*time.Minute, 5*time.Minute, false, 3, 20, 3)
 	baseTime := time.Date(2024, 1, 1, 10, 0, 0, 0, time.UTC)
 
 	g.GenerateInitialData(baseTime)
@@ -412,7 +422,7 @@ func TestGenerator_TimeCalculations(t *testing.T) {
 }
 
 func TestGenerator_CompetitorProgression(t *testing.T) {
-	g := NewGenerator(15*time.Minute, 3*time.Minute, 7*time.Minute, 5*time.Minute, false)
+	g := NewGenerator(15*time.Minute, 3*time.Minute, 7*time.Minute, 5*time.Minute, false, 3, 20, 3)
 	baseTime := time.Date(2024, 1, 1, 10, 0, 0, 0, time.UTC)
 
 	g.GenerateInitialData(baseTime)
@@ -462,7 +472,7 @@ func TestGenerator_CompetitorProgression(t *testing.T) {
 }
 
 func TestGenerator_SplitTimeConsistency(t *testing.T) {
-	g := NewGenerator(15*time.Minute, 3*time.Minute, 7*time.Minute, 5*time.Minute, false)
+	g := NewGenerator(15*time.Minute, 3*time.Minute, 7*time.Minute, 5*time.Minute, false, 3, 20, 3)
 	baseTime := time.Date(2024, 1, 1, 10, 0, 0, 0, time.UTC)
 
 	g.GenerateInitialData(baseTime)
@@ -512,7 +522,7 @@ func minOfThree(a, b, c int) int {
 }
 
 func TestGenerator_ClassSpecificRadioControls(t *testing.T) {
-	g := NewGenerator(15*time.Minute, 3*time.Minute, 7*time.Minute, 5*time.Minute, false)
+	g := NewGenerator(15*time.Minute, 3*time.Minute, 7*time.Minute, 5*time.Minute, false, 3, 20, 3)
 	baseTime := time.Date(2024, 1, 1, 10, 0, 0, 0, time.UTC)
 
 	g.GenerateInitialData(baseTime)
@@ -521,7 +531,7 @@ func TestGenerator_ClassSpecificRadioControls(t *testing.T) {
 	currentTime := baseTime.Add(12 * time.Minute)
 	competitors := g.UpdateSimulation(currentTime)
 
-	// Check Men Junior class has only 2 radio controls
+	// Check Men Junior class has only 2 radio controls (every 3rd class gets one fewer)
 	for _, comp := range competitors {
 		if comp.Class.Name == "Men Junior" && comp.Status == "1" {
 			if len(comp.Splits) != 2 {
@@ -535,5 +545,198 @@ func TestGenerator_ClassSpecificRadioControls(t *testing.T) {
 					comp.Class.Name, comp.Name, len(comp.Splits), len(comp.Class.RadioControls))
 			}
 		}
+	}
+}
+
+func TestGenerator_ConfigurableParameters(t *testing.T) {
+	tests := []struct {
+		name                    string
+		numClasses             int
+		runnersPerClass        int
+		radioControls          int
+		expectedTotalCompetitors int
+		expectedControls        int
+		expectedClasses         int
+	}{
+		{
+			name:                    "Default configuration",
+			numClasses:             3,
+			runnersPerClass:        20,
+			radioControls:          3,
+			expectedTotalCompetitors: 60,
+			expectedControls:        3,
+			expectedClasses:         3,
+		},
+		{
+			name:                    "Large event",
+			numClasses:             5,
+			runnersPerClass:        50,
+			radioControls:          5,
+			expectedTotalCompetitors: 250,
+			expectedControls:        5,
+			expectedClasses:         5,
+		},
+		{
+			name:                    "Small sprint event",
+			numClasses:             2,
+			runnersPerClass:        10,
+			radioControls:          1,
+			expectedTotalCompetitors: 20,
+			expectedControls:        1,
+			expectedClasses:         2,
+		},
+		{
+			name:                    "No radio controls",
+			numClasses:             3,
+			runnersPerClass:        15,
+			radioControls:          0,
+			expectedTotalCompetitors: 45,
+			expectedControls:        0,
+			expectedClasses:         3,
+		},
+		{
+			name:                    "Many classes, few runners",
+			numClasses:             10,
+			runnersPerClass:        5,
+			radioControls:          2,
+			expectedTotalCompetitors: 50,
+			expectedControls:        2,
+			expectedClasses:         10,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			g := NewGenerator(15*time.Minute, 3*time.Minute, 7*time.Minute, 5*time.Minute, false,
+				tt.numClasses, tt.runnersPerClass, tt.radioControls)
+			baseTime := time.Date(2024, 1, 1, 10, 0, 0, 0, time.UTC)
+
+			event, controls, classes, clubs, competitors := g.GenerateInitialData(baseTime)
+
+			// Test controls
+			if len(controls) != tt.expectedControls {
+				t.Errorf("Number of controls = %d, want %d", len(controls), tt.expectedControls)
+			}
+			for i, control := range controls {
+				expectedName := fmt.Sprintf("Radio %d", i+1)
+				if control.Name != expectedName {
+					t.Errorf("Control[%d] name = %q, want %q", i, control.Name, expectedName)
+				}
+			}
+
+			// Test classes
+			if len(classes) != tt.expectedClasses {
+				t.Errorf("Number of classes = %d, want %d", len(classes), tt.expectedClasses)
+			}
+			expectedClassNames := []string{"Men Elite", "Women Elite", "Men Junior", "Women Junior", "Men 21", "Women 21", "Men 35", "Women 35", "Men 40", "Women 40"}
+			for i, class := range classes {
+				// Check class name
+				expectedName := fmt.Sprintf("Class %d", i+1)
+				if i < len(expectedClassNames) {
+					expectedName = expectedClassNames[i]
+				}
+				if class.Name != expectedName {
+					t.Errorf("Class[%d] name = %q, want %q", i, class.Name, expectedName)
+				}
+
+				// Check radio controls assignment
+				expectedControlsForClass := tt.radioControls
+				if tt.radioControls > 1 && (i+1)%3 == 0 {
+					// Every third class gets one fewer control
+					expectedControlsForClass = tt.radioControls - 1
+				}
+				if len(class.RadioControls) != expectedControlsForClass {
+					t.Errorf("Class[%d] radio controls = %d, want %d", i, len(class.RadioControls), expectedControlsForClass)
+				}
+			}
+
+			// Test competitors
+			if len(competitors) != tt.expectedTotalCompetitors {
+				t.Errorf("Number of competitors = %d, want %d", len(competitors), tt.expectedTotalCompetitors)
+			}
+
+			// Test competitor distribution
+			classCounts := make(map[int]int)
+			for _, comp := range competitors {
+				classCounts[comp.Class.ID]++
+			}
+			for classID, count := range classCounts {
+				if count != tt.runnersPerClass {
+					t.Errorf("Class %d has %d competitors, want %d", classID, count, tt.runnersPerClass)
+				}
+			}
+
+			// Basic sanity checks
+			if event.Name != "Simulation Event" {
+				t.Errorf("Event name = %q, want %q", event.Name, "Simulation Event")
+			}
+			if len(clubs) != len(clubNames) {
+				t.Errorf("Number of clubs = %d, want %d", len(clubs), len(clubNames))
+			}
+		})
+	}
+}
+
+func TestGenerator_EdgeCases(t *testing.T) {
+	tests := []struct {
+		name        string
+		numClasses  int
+		runners     int
+		controls    int
+		shouldPanic bool
+	}{
+		{
+			name:       "Single class",
+			numClasses: 1,
+			runners:    10,
+			controls:   2,
+		},
+		{
+			name:       "Single runner per class",
+			numClasses: 3,
+			runners:    1,
+			controls:   3,
+		},
+		{
+			name:       "Zero radio controls",
+			numClasses: 2,
+			runners:    15,
+			controls:   0,
+		},
+		{
+			name:       "Many radio controls",
+			numClasses: 2,
+			runners:    10,
+			controls:   10,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			g := NewGenerator(15*time.Minute, 3*time.Minute, 7*time.Minute, 5*time.Minute, false,
+				tt.numClasses, tt.runners, tt.controls)
+			baseTime := time.Date(2024, 1, 1, 10, 0, 0, 0, time.UTC)
+
+			_, controls, classes, _, competitors := g.GenerateInitialData(baseTime)
+
+			// Verify basic structure
+			if len(controls) != tt.controls {
+				t.Errorf("Controls count = %d, want %d", len(controls), tt.controls)
+			}
+			if len(classes) != tt.numClasses {
+				t.Errorf("Classes count = %d, want %d", len(classes), tt.numClasses)
+			}
+			expectedTotal := tt.numClasses * tt.runners
+			if len(competitors) != expectedTotal {
+				t.Errorf("Competitors count = %d, want %d", len(competitors), expectedTotal)
+			}
+
+			// Test simulation still works
+			currentTime := baseTime.Add(5 * time.Minute)
+			updatedCompetitors := g.UpdateSimulation(currentTime)
+			if len(updatedCompetitors) != len(competitors) {
+				t.Errorf("Competitor count changed during simulation: %d -> %d", len(competitors), len(updatedCompetitors))
+			}
+		})
 	}
 }

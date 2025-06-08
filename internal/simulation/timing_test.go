@@ -79,7 +79,7 @@ func TestConfigurableTiming(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			appState := state.New()
-			adapter := NewAdapter(appState, tt.duration, tt.phaseStart, tt.phaseRunning, tt.phaseResults, false)
+			adapter := NewAdapter(appState, tt.duration, tt.phaseStart, tt.phaseRunning, tt.phaseResults, false, 3, 20, 3)
 
 			// Verify timing configuration was set
 			if adapter.duration != tt.duration {
@@ -210,7 +210,7 @@ func TestPhaseLogging(t *testing.T) {
 	}
 
 	appState := state.New()
-	adapter := NewAdapter(appState, 3*time.Minute, 30*time.Second, 90*time.Second, 60*time.Second, false)
+	adapter := NewAdapter(appState, 3*time.Minute, 30*time.Second, 90*time.Second, 60*time.Second, false, 3, 20, 3)
 	adapter.Connect()
 
 	baseTime := appState.GetEvent().Start
