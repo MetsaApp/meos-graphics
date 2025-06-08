@@ -17,7 +17,7 @@
             "name": "MIT",
             "url": "https://opensource.org/licenses/MIT"
         },
-        "version": "1.0.2 x-release-please-version"
+        "version": "1.1.0 x-release-please-version"
     },
     "host": "localhost:8090",
     "basePath": "/",
@@ -41,7 +41,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/service.ClassInfo"
+                                "$ref": "#/definitions/meos-graphics_internal_service.ClassInfo"
                             }
                         }
                     }
@@ -76,7 +76,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/service.ResultEntry"
+                                "$ref": "#/definitions/meos-graphics_internal_service.ResultEntry"
                             }
                         }
                     },
@@ -127,7 +127,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/service.SplitsResponse"
+                            "$ref": "#/definitions/meos-graphics_internal_service.SplitsResponse"
                         }
                     },
                     "400": {
@@ -179,7 +179,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/service.StartListEntry"
+                                "$ref": "#/definitions/meos-graphics_internal_service.StartListEntry"
                             }
                         }
                     },
@@ -206,7 +206,7 @@
         }
     },
     "definitions": {
-        "service.ClassInfo": {
+        "meos-graphics_internal_service.ClassInfo": {
             "type": "object",
             "properties": {
                 "id": {
@@ -220,7 +220,7 @@
                 }
             }
         },
-        "service.ResultEntry": {
+        "meos-graphics_internal_service.ResultEntry": {
             "type": "object",
             "properties": {
                 "club": {
@@ -245,7 +245,7 @@
                 }
             }
         },
-        "service.SplitStanding": {
+        "meos-graphics_internal_service.SplitStanding": {
             "type": "object",
             "properties": {
                 "controlId": {
@@ -257,12 +257,12 @@
                 "standings": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/service.SplitTime"
+                        "$ref": "#/definitions/meos-graphics_internal_service.SplitTime"
                     }
                 }
             }
         },
-        "service.SplitTime": {
+        "meos-graphics_internal_service.SplitTime": {
             "type": "object",
             "properties": {
                 "club": {
@@ -282,7 +282,7 @@
                 }
             }
         },
-        "service.SplitsResponse": {
+        "meos-graphics_internal_service.SplitsResponse": {
             "type": "object",
             "properties": {
                 "className": {
@@ -291,12 +291,12 @@
                 "splits": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/service.SplitStanding"
+                        "$ref": "#/definitions/meos-graphics_internal_service.SplitStanding"
                     }
                 }
             }
         },
-        "service.StartListEntry": {
+        "meos-graphics_internal_service.StartListEntry": {
             "type": "object",
             "properties": {
                 "club": {

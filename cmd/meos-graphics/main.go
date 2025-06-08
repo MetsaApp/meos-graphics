@@ -294,8 +294,18 @@ func run(_ *cobra.Command, _ []string) error {
 	// Configure Swagger host dynamically
 	docs.SwaggerInfo.Host = cmd.SwaggerHost
 
-	// Swagger documentation
-	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	// Swagger documentation with scheme detection
+	router.GET("/swagger/*any", func(c *gin.Context) {
+		// Detect if request is coming over HTTPS
+		if c.Request.TLS != nil || c.GetHeader("X-Forwarded-Proto") == "https" {
+			// Prioritize HTTPS when accessed over HTTPS
+			docs.SwaggerInfo.Schemes = []string{"https", "http"}
+		} else {
+			// Default to HTTP first for local development
+			docs.SwaggerInfo.Schemes = []string{"http", "https"}
+		}
+		ginSwagger.WrapHandler(swaggerFiles.Handler)(c)
+	})
 
 	// API documentation redirect
 	router.GET("/docs", func(c *gin.Context) {
