@@ -1,4 +1,4 @@
-# MeOS Graphics API
+# MeOS Graphics API 
 
 A Go-based REST API server that connects to MeOS (orienteering event software) and provides competition data for graphics displays.
 
