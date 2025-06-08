@@ -550,58 +550,58 @@ func TestGenerator_ClassSpecificRadioControls(t *testing.T) {
 
 func TestGenerator_ConfigurableParameters(t *testing.T) {
 	tests := []struct {
-		name                    string
-		numClasses             int
-		runnersPerClass        int
-		radioControls          int
+		name                     string
+		numClasses               int
+		runnersPerClass          int
+		radioControls            int
 		expectedTotalCompetitors int
-		expectedControls        int
-		expectedClasses         int
+		expectedControls         int
+		expectedClasses          int
 	}{
 		{
-			name:                    "Default configuration",
-			numClasses:             3,
-			runnersPerClass:        20,
-			radioControls:          3,
+			name:                     "Default configuration",
+			numClasses:               3,
+			runnersPerClass:          20,
+			radioControls:            3,
 			expectedTotalCompetitors: 60,
-			expectedControls:        3,
-			expectedClasses:         3,
+			expectedControls:         3,
+			expectedClasses:          3,
 		},
 		{
-			name:                    "Large event",
-			numClasses:             5,
-			runnersPerClass:        50,
-			radioControls:          5,
+			name:                     "Large event",
+			numClasses:               5,
+			runnersPerClass:          50,
+			radioControls:            5,
 			expectedTotalCompetitors: 250,
-			expectedControls:        5,
-			expectedClasses:         5,
+			expectedControls:         5,
+			expectedClasses:          5,
 		},
 		{
-			name:                    "Small sprint event",
-			numClasses:             2,
-			runnersPerClass:        10,
-			radioControls:          1,
+			name:                     "Small sprint event",
+			numClasses:               2,
+			runnersPerClass:          10,
+			radioControls:            1,
 			expectedTotalCompetitors: 20,
-			expectedControls:        1,
-			expectedClasses:         2,
+			expectedControls:         1,
+			expectedClasses:          2,
 		},
 		{
-			name:                    "No radio controls",
-			numClasses:             3,
-			runnersPerClass:        15,
-			radioControls:          0,
+			name:                     "No radio controls",
+			numClasses:               3,
+			runnersPerClass:          15,
+			radioControls:            0,
 			expectedTotalCompetitors: 45,
-			expectedControls:        0,
-			expectedClasses:         3,
+			expectedControls:         0,
+			expectedClasses:          3,
 		},
 		{
-			name:                    "Many classes, few runners",
-			numClasses:             10,
-			runnersPerClass:        5,
-			radioControls:          2,
+			name:                     "Many classes, few runners",
+			numClasses:               10,
+			runnersPerClass:          5,
+			radioControls:            2,
 			expectedTotalCompetitors: 50,
-			expectedControls:        2,
-			expectedClasses:         10,
+			expectedControls:         2,
+			expectedClasses:          10,
 		},
 	}
 

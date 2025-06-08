@@ -293,7 +293,7 @@ func run(_ *cobra.Command, _ []string) error {
 
 	// Configure Swagger host dynamically
 	docs.SwaggerInfo.Host = cmd.SwaggerHost
-	
+
 	// Swagger documentation
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
