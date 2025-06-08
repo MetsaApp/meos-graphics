@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.2](https://github.com/MetsaApp/meos-graphics/compare/v1.0.1...v1.0.2) (2025-06-08)
+
+
+### Bug Fixes
+
+* convert repository name to lowercase for Docker registry ([#48](https://github.com/MetsaApp/meos-graphics/issues/48)) ([b10824d](https://github.com/MetsaApp/meos-graphics/commit/b10824df50131ff62db76846653c052d48300b7a))
+
 ## [1.0.1](https://github.com/MetsaApp/meos-graphics/compare/v1.0.0...v1.0.1) (2025-06-06)
 
 
