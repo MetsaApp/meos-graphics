@@ -315,10 +315,10 @@ func (g *Generator) generateCompetitorTiming(competitorID int, class models.Clas
 		if g.phaseRunning >= 7*time.Minute && totalTime < 5*time.Minute {
 			// Generate a more varied time around 5 minutes to avoid identical times
 			// But respect the max allowed time (90% of running phase)
-			baseVariation := g.rnd.Intn(40) // 0-40 seconds
+			baseVariation := g.rnd.Intn(40)    // 0-40 seconds
 			secondsVariation := g.rnd.Intn(20) // 0-20 additional seconds
 			newTime := 5*time.Minute + time.Duration(baseVariation)*time.Second + time.Duration(secondsVariation)*time.Second
-			
+
 			// Ensure we don't exceed the maximum allowed time
 			if newTime <= maxRunningTime {
 				totalTime = newTime
@@ -633,10 +633,10 @@ func (g *Generator) updateCompetitorProgress(progress float64) {
 				// For standard competitions, enforce 5 minute minimum with better variation
 				// But respect the max allowed time (90% of running phase)
 				maxAllowedRunTime := time.Duration(float64(g.phaseRunning) * 0.9)
-				baseVariation := g.rnd.Intn(40) // 0-40 seconds  
+				baseVariation := g.rnd.Intn(40)    // 0-40 seconds
 				secondsVariation := g.rnd.Intn(20) // 0-20 additional seconds
 				newRunTime := 5*time.Minute + time.Duration(baseVariation)*time.Second + time.Duration(secondsVariation)*time.Second
-				
+
 				if newRunTime <= maxAllowedRunTime {
 					cappedFinishTime = comp.StartTime.Add(newRunTime)
 				} else {
