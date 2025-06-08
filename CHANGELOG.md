@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.3](https://github.com/MetsaApp/meos-graphics/compare/v1.0.2...v1.0.3) (2025-06-08)
+
+
+### Bug Fixes
+
+* add packages write permission for Docker registry push ([#50](https://github.com/MetsaApp/meos-graphics/issues/50)) ([5fb16dd](https://github.com/MetsaApp/meos-graphics/commit/5fb16dd6d93b249b290198d9d71c288e1f65b724))
+
 ## [1.0.2](https://github.com/MetsaApp/meos-graphics/compare/v1.0.1...v1.0.2) (2025-06-08)
 
 
