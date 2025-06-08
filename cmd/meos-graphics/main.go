@@ -27,7 +27,7 @@ import (
 	"meos-graphics/internal/version"
 	"meos-graphics/internal/web"
 
-	_ "meos-graphics/docs" // Import generated swagger docs
+	"meos-graphics/docs" // Import generated swagger docs
 )
 
 // @title meos-graphics
@@ -271,6 +271,9 @@ func run(_ *cobra.Command, _ []string) error {
 		}
 	})
 
+	// Configure Swagger host dynamically
+	docs.SwaggerInfo.Host = cmd.SwaggerHost
+	
 	// Swagger documentation
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
