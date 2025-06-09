@@ -17,7 +17,7 @@ func TestSimulationFullCycle(t *testing.T) {
 	}
 
 	appState := state.New()
-	adapter := NewAdapter(appState, 15*time.Minute, 3*time.Minute, 7*time.Minute, 5*time.Minute, false)
+	adapter := NewAdapter(appState, 15*time.Minute, 3*time.Minute, 7*time.Minute, 5*time.Minute, false, 3, 20, 3)
 
 	// Use deterministic generator for predictable tests
 	adapter.generator.rnd = rand.New(rand.NewSource(12345))
@@ -151,7 +151,7 @@ func TestSimulationProgressionInvariants(t *testing.T) {
 	}
 
 	appState := state.New()
-	adapter := NewAdapter(appState, 15*time.Minute, 3*time.Minute, 7*time.Minute, 5*time.Minute, false)
+	adapter := NewAdapter(appState, 15*time.Minute, 3*time.Minute, 7*time.Minute, 5*time.Minute, false, 3, 20, 3)
 
 	// Use deterministic generator
 	adapter.generator.rnd = rand.New(rand.NewSource(54321))
@@ -241,7 +241,7 @@ func TestSimulationDeterminism(t *testing.T) {
 
 	for run := 0; run < 2; run++ {
 		appState := state.New()
-		adapter := NewAdapter(appState, 15*time.Minute, 3*time.Minute, 7*time.Minute, 5*time.Minute, false)
+		adapter := NewAdapter(appState, 15*time.Minute, 3*time.Minute, 7*time.Minute, 5*time.Minute, false, 3, 20, 3)
 		adapter.generator.rnd = rand.New(rand.NewSource(seed))
 
 		// Override the base time to be deterministic
@@ -301,7 +301,7 @@ func TestSimulationPerformance(t *testing.T) {
 	}
 
 	appState := state.New()
-	adapter := NewAdapter(appState, 15*time.Minute, 3*time.Minute, 7*time.Minute, 5*time.Minute, false)
+	adapter := NewAdapter(appState, 15*time.Minute, 3*time.Minute, 7*time.Minute, 5*time.Minute, false, 3, 20, 3)
 	adapter.Connect()
 
 	baseTime := appState.GetEvent().Start
@@ -335,7 +335,7 @@ func TestSimulationStateManagement(t *testing.T) {
 	}
 
 	appState := state.New()
-	adapter := NewAdapter(appState, 15*time.Minute, 3*time.Minute, 7*time.Minute, 5*time.Minute, false)
+	adapter := NewAdapter(appState, 15*time.Minute, 3*time.Minute, 7*time.Minute, 5*time.Minute, false, 3, 20, 3)
 
 	// Test before connection
 	if adapter.connected {
@@ -377,7 +377,7 @@ func TestSimulationDataIntegrity(t *testing.T) {
 	}
 
 	appState := state.New()
-	adapter := NewAdapter(appState, 15*time.Minute, 3*time.Minute, 7*time.Minute, 5*time.Minute, false)
+	adapter := NewAdapter(appState, 15*time.Minute, 3*time.Minute, 7*time.Minute, 5*time.Minute, false, 3, 20, 3)
 	adapter.Connect()
 
 	baseTime := appState.GetEvent().Start

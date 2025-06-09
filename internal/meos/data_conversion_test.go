@@ -167,10 +167,6 @@ func TestAdapter_ConvertCompetitors(t *testing.T) {
 					Text:        "John Doe",
 				},
 				Radio: "101,302;102,584;103,723",
-				Input: MOPInput{
-					InputTime:  "4434",
-					TimeStatus: "1",
-				},
 			},
 			{
 				ID:   "2",

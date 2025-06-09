@@ -10,7 +10,7 @@ import (
 
 func TestNewAdapter(t *testing.T) {
 	appState := state.New()
-	adapter := NewAdapter(appState, 15*time.Minute, 3*time.Minute, 7*time.Minute, 5*time.Minute, false)
+	adapter := NewAdapter(appState, 15*time.Minute, 3*time.Minute, 7*time.Minute, 5*time.Minute, false, 3, 20, 3)
 
 	if adapter == nil {
 		t.Fatal("NewAdapter() returned nil")
@@ -33,7 +33,7 @@ func TestAdapter_Connect(t *testing.T) {
 	}
 
 	appState := state.New()
-	adapter := NewAdapter(appState, 15*time.Minute, 3*time.Minute, 7*time.Minute, 5*time.Minute, false)
+	adapter := NewAdapter(appState, 15*time.Minute, 3*time.Minute, 7*time.Minute, 5*time.Minute, false, 3, 20, 3)
 
 	err := adapter.Connect()
 	if err != nil {
@@ -84,7 +84,7 @@ func TestAdapter_Connect(t *testing.T) {
 
 func TestAdapter_StartPolling_NotConnected(t *testing.T) {
 	appState := state.New()
-	adapter := NewAdapter(appState, 15*time.Minute, 3*time.Minute, 7*time.Minute, 5*time.Minute, false)
+	adapter := NewAdapter(appState, 15*time.Minute, 3*time.Minute, 7*time.Minute, 5*time.Minute, false, 3, 20, 3)
 
 	// Should not error when not connected
 	err := adapter.StartPolling()
@@ -100,7 +100,7 @@ func TestAdapter_StartPolling_Connected(t *testing.T) {
 	}
 
 	appState := state.New()
-	adapter := NewAdapter(appState, 15*time.Minute, 3*time.Minute, 7*time.Minute, 5*time.Minute, false)
+	adapter := NewAdapter(appState, 15*time.Minute, 3*time.Minute, 7*time.Minute, 5*time.Minute, false, 3, 20, 3)
 
 	// Connect first
 	err := adapter.Connect()
@@ -130,7 +130,7 @@ func TestAdapter_Stop(t *testing.T) {
 	}
 
 	appState := state.New()
-	adapter := NewAdapter(appState, 15*time.Minute, 3*time.Minute, 7*time.Minute, 5*time.Minute, false)
+	adapter := NewAdapter(appState, 15*time.Minute, 3*time.Minute, 7*time.Minute, 5*time.Minute, false, 3, 20, 3)
 
 	// Connect and start polling
 	adapter.Connect()
@@ -166,7 +166,7 @@ func TestAdapter_UpdateSimulation(t *testing.T) {
 	}
 
 	appState := state.New()
-	adapter := NewAdapter(appState, 15*time.Minute, 3*time.Minute, 7*time.Minute, 5*time.Minute, false)
+	adapter := NewAdapter(appState, 15*time.Minute, 3*time.Minute, 7*time.Minute, 5*time.Minute, false, 3, 20, 3)
 
 	// Connect to initialize data
 	adapter.Connect()
@@ -199,7 +199,7 @@ func TestAdapter_SimulationCycle(t *testing.T) {
 	}
 
 	appState := state.New()
-	adapter := NewAdapter(appState, 15*time.Minute, 3*time.Minute, 7*time.Minute, 5*time.Minute, false)
+	adapter := NewAdapter(appState, 15*time.Minute, 3*time.Minute, 7*time.Minute, 5*time.Minute, false, 3, 20, 3)
 
 	// Connect to initialize
 	adapter.Connect()
@@ -260,7 +260,7 @@ func TestAdapter_ConcurrentAccess(t *testing.T) {
 	}
 
 	appState := state.New()
-	adapter := NewAdapter(appState, 15*time.Minute, 3*time.Minute, 7*time.Minute, 5*time.Minute, false)
+	adapter := NewAdapter(appState, 15*time.Minute, 3*time.Minute, 7*time.Minute, 5*time.Minute, false, 3, 20, 3)
 
 	// Connect and start
 	adapter.Connect()
@@ -308,7 +308,7 @@ func TestAdapter_ResetBehavior(t *testing.T) {
 	}
 
 	appState := state.New()
-	adapter := NewAdapter(appState, 15*time.Minute, 3*time.Minute, 7*time.Minute, 5*time.Minute, false)
+	adapter := NewAdapter(appState, 15*time.Minute, 3*time.Minute, 7*time.Minute, 5*time.Minute, false, 3, 20, 3)
 
 	adapter.Connect()
 
@@ -353,7 +353,7 @@ func TestAdapter_StateConsistency(t *testing.T) {
 	}
 
 	appState := state.New()
-	adapter := NewAdapter(appState, 15*time.Minute, 3*time.Minute, 7*time.Minute, 5*time.Minute, false)
+	adapter := NewAdapter(appState, 15*time.Minute, 3*time.Minute, 7*time.Minute, 5*time.Minute, false, 3, 20, 3)
 
 	adapter.Connect()
 
@@ -406,7 +406,7 @@ func BenchmarkAdapter_UpdateSimulation(b *testing.B) {
 	logger.Init()
 
 	appState := state.New()
-	adapter := NewAdapter(appState, 15*time.Minute, 3*time.Minute, 7*time.Minute, 5*time.Minute, false)
+	adapter := NewAdapter(appState, 15*time.Minute, 3*time.Minute, 7*time.Minute, 5*time.Minute, false, 3, 20, 3)
 	adapter.Connect()
 
 	b.ResetTimer()
@@ -421,7 +421,7 @@ func BenchmarkAdapter_StateRead(b *testing.B) {
 	logger.Init()
 
 	appState := state.New()
-	adapter := NewAdapter(appState, 15*time.Minute, 3*time.Minute, 7*time.Minute, 5*time.Minute, false)
+	adapter := NewAdapter(appState, 15*time.Minute, 3*time.Minute, 7*time.Minute, 5*time.Minute, false, 3, 20, 3)
 	adapter.Connect()
 
 	b.ResetTimer()

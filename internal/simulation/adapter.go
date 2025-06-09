@@ -23,10 +23,10 @@ type Adapter struct {
 	phaseResults time.Duration
 }
 
-func NewAdapter(appState *state.State, duration, phaseStart, phaseRunning, phaseResults time.Duration, massStart bool) *Adapter {
+func NewAdapter(appState *state.State, duration, phaseStart, phaseRunning, phaseResults time.Duration, massStart bool, numClasses, runnersPerClass, radioControls int) *Adapter {
 	return &Adapter{
 		state:        appState,
-		generator:    NewGenerator(duration, phaseStart, phaseRunning, phaseResults, massStart),
+		generator:    NewGenerator(duration, phaseStart, phaseRunning, phaseResults, massStart, numClasses, runnersPerClass, radioControls),
 		stopChan:     make(chan struct{}),
 		duration:     duration,
 		phaseStart:   phaseStart,

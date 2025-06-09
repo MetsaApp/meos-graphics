@@ -46,11 +46,16 @@ type Generator struct {
 	phaseResults time.Duration
 	massStart    bool
 
+	// Content configuration
+	numClasses      int
+	runnersPerClass int
+	radioControls   int
+
 	// Pre-calculated timings for each competitor
 	competitorTimings map[int]competitorTiming
 }
 
-func NewGenerator(duration, phaseStart, phaseRunning, phaseResults time.Duration, massStart bool) *Generator {
+func NewGenerator(duration, phaseStart, phaseRunning, phaseResults time.Duration, massStart bool, numClasses, runnersPerClass, radioControls int) *Generator {
 	return &Generator{
 		rnd:               rand.New(rand.NewSource(time.Now().UnixNano())),
 		duration:          duration,
@@ -58,6 +63,9 @@ func NewGenerator(duration, phaseStart, phaseRunning, phaseResults time.Duration
 		phaseRunning:      phaseRunning,
 		phaseResults:      phaseResults,
 		massStart:         massStart,
+		numClasses:        numClasses,
+		runnersPerClass:   runnersPerClass,
+		radioControls:     radioControls,
 		competitorTimings: make(map[int]competitorTiming),
 	}
 }
@@ -73,11 +81,13 @@ func (g *Generator) GenerateInitialData(baseTime time.Time) (models.Event, []mod
 		Start:     baseTime,
 	}
 
-	// Create controls
-	g.controls = []models.Control{
-		{ID: 1, Name: "Radio 1"},
-		{ID: 2, Name: "Radio 2"},
-		{ID: 3, Name: "Radio 3"},
+	// Create controls based on configuration
+	g.controls = make([]models.Control, 0, g.radioControls)
+	for i := 1; i <= g.radioControls; i++ {
+		g.controls = append(g.controls, models.Control{
+			ID:   i,
+			Name: fmt.Sprintf("Radio %d", i),
+		})
 	}
 
 	// Create clubs
@@ -90,26 +100,30 @@ func (g *Generator) GenerateInitialData(baseTime time.Time) (models.Event, []mod
 		})
 	}
 
-	// Create classes
-	g.classes = []models.Class{
-		{
-			ID:            1,
-			Name:          "Men Elite",
-			OrderKey:      10,
-			RadioControls: g.controls,
-		},
-		{
-			ID:            2,
-			Name:          "Women Elite",
-			OrderKey:      20,
-			RadioControls: g.controls,
-		},
-		{
-			ID:            3,
-			Name:          "Men Junior",
-			OrderKey:      30,
-			RadioControls: g.controls[:2], // Only 2 radio controls
-		},
+	// Create classes based on configuration
+	classNames := []string{"Men Elite", "Women Elite", "Men Junior", "Women Junior", "Men 21", "Women 21", "Men 35", "Women 35", "Men 40", "Women 40"}
+	g.classes = make([]models.Class, 0, g.numClasses)
+	for i := 1; i <= g.numClasses; i++ {
+		// Cycle through class names if we have more classes than predefined names
+		className := fmt.Sprintf("Class %d", i)
+		if i-1 < len(classNames) {
+			className = classNames[i-1]
+		}
+
+		// Determine radio controls for this class
+		// Most classes get all controls, but vary some for realism
+		radioControls := g.controls
+		if g.radioControls > 1 && i%3 == 0 {
+			// Every third class gets one fewer control for variety
+			radioControls = g.controls[:g.radioControls-1]
+		}
+
+		g.classes = append(g.classes, models.Class{
+			ID:            i,
+			Name:          className,
+			OrderKey:      i * 10,
+			RadioControls: radioControls,
+		})
 	}
 
 	// Generate competitors
@@ -125,7 +139,7 @@ func (g *Generator) generateCompetitors(baseTime time.Time) []models.Competitor 
 
 	// Generate competitors for each class
 	for _, class := range g.classes {
-		numCompetitors := 15 + g.rnd.Intn(10) // 15-25 competitors per class
+		numCompetitors := g.runnersPerClass
 
 		for i := 0; i < numCompetitors; i++ {
 			firstName := firstNames[g.rnd.Intn(len(firstNames))]
@@ -152,8 +166,7 @@ func (g *Generator) generateCompetitors(baseTime time.Time) []models.Competitor 
 				// Calculate appropriate interval
 				totalCompetitors := 0
 				for range g.classes {
-					// Estimate 15-25 per class
-					totalCompetitors += 20
+					totalCompetitors += g.runnersPerClass
 				}
 
 				var startInterval time.Duration
@@ -300,7 +313,20 @@ func (g *Generator) generateCompetitorTiming(competitorID int, class models.Clas
 
 		// For test consistency, ensure minimum 5 minutes if phase allows it
 		if g.phaseRunning >= 7*time.Minute && totalTime < 5*time.Minute {
-			totalTime = 5*time.Minute + time.Duration(g.rnd.Intn(30))*time.Second
+			// Generate a more varied time around 5 minutes to avoid identical times
+			// But respect the max allowed time (90% of running phase)
+			baseVariation := g.rnd.Intn(40)    // 0-40 seconds
+			secondsVariation := g.rnd.Intn(20) // 0-20 additional seconds
+			newTime := 5*time.Minute + time.Duration(baseVariation)*time.Second + time.Duration(secondsVariation)*time.Second
+
+			// Ensure we don't exceed the maximum allowed time
+			if newTime <= maxRunningTime {
+				totalTime = newTime
+			} else {
+				// Fall back to a time within bounds but still varied
+				variation := g.rnd.Intn(30) // 0-30 seconds
+				totalTime = 5*time.Minute + time.Duration(variation)*time.Second
+			}
 		}
 
 		g.competitorTimings[competitorID] = competitorTiming{
@@ -604,8 +630,20 @@ func (g *Generator) updateCompetitorProgress(progress float64) {
 			// Additional check: ensure minimum run time for standard competitions
 			actualRunTime := cappedFinishTime.Sub(comp.StartTime)
 			if g.phaseRunning >= 7*time.Minute && actualRunTime < 5*time.Minute {
-				// For standard competitions, enforce 5 minute minimum
-				cappedFinishTime = comp.StartTime.Add(5*time.Minute + time.Duration(g.rnd.Intn(30))*time.Second)
+				// For standard competitions, enforce 5 minute minimum with better variation
+				// But respect the max allowed time (90% of running phase)
+				maxAllowedRunTime := time.Duration(float64(g.phaseRunning) * 0.9)
+				baseVariation := g.rnd.Intn(40)    // 0-40 seconds
+				secondsVariation := g.rnd.Intn(20) // 0-20 additional seconds
+				newRunTime := 5*time.Minute + time.Duration(baseVariation)*time.Second + time.Duration(secondsVariation)*time.Second
+
+				if newRunTime <= maxAllowedRunTime {
+					cappedFinishTime = comp.StartTime.Add(newRunTime)
+				} else {
+					// Fall back to a time within bounds but still varied
+					variation := g.rnd.Intn(30) // 0-30 seconds
+					cappedFinishTime = comp.StartTime.Add(5*time.Minute + time.Duration(variation)*time.Second)
+				}
 			}
 
 			comp.Status = "1" // Finished
@@ -684,7 +722,7 @@ func (g *Generator) calculateStartInterval() time.Duration {
 	if totalCompetitors == 0 {
 		// Estimate based on classes
 		for range g.classes {
-			totalCompetitors += 20
+			totalCompetitors += g.runnersPerClass
 		}
 	}
 

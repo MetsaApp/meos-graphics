@@ -12,6 +12,7 @@ var (
 	PollInterval   time.Duration
 	MeosHost       string
 	MeosPort       string
+	SwaggerHost    string
 
 	// Simulation timing configuration
 	SimulationDuration     time.Duration
@@ -19,6 +20,11 @@ var (
 	SimulationPhaseRunning time.Duration
 	SimulationPhaseResults time.Duration
 	SimulationMassStart    bool
+
+	// Simulation content configuration
+	SimulationNumClasses      int
+	SimulationRunnersPerClass int
+	SimulationRadioControls   int
 )
 
 // NewRootCommand creates and returns the root cobra command
@@ -39,6 +45,7 @@ The server can run in two modes:
 	rootCmd.Flags().DurationVar(&PollInterval, "poll-interval", 1*time.Second, "Poll interval for MeOS data updates (e.g., 200ms, 9s, 2m)")
 	rootCmd.Flags().StringVar(&MeosHost, "meos-host", "localhost", "MeOS server hostname or IP address")
 	rootCmd.Flags().StringVar(&MeosPort, "meos-port", "2009", "MeOS server port (use 'none' to omit port from URL)")
+	rootCmd.Flags().StringVar(&SwaggerHost, "swagger-host", "localhost:8090", "Hostname for Swagger documentation API calls")
 
 	// Simulation timing flags
 	rootCmd.Flags().DurationVar(&SimulationDuration, "simulation-duration", 15*time.Minute, "Total simulation cycle duration (only with --simulation)")
@@ -46,6 +53,11 @@ The server can run in two modes:
 	rootCmd.Flags().DurationVar(&SimulationPhaseRunning, "simulation-phase-running", 7*time.Minute, "Duration of running phase (only with --simulation)")
 	rootCmd.Flags().DurationVar(&SimulationPhaseResults, "simulation-phase-results", 5*time.Minute, "Duration of results phase (only with --simulation)")
 	rootCmd.Flags().BoolVar(&SimulationMassStart, "simulation-mass-start", false, "Use mass start instead of staggered starts (only with --simulation)")
+
+	// Simulation content flags
+	rootCmd.Flags().IntVar(&SimulationNumClasses, "simulation-classes", 3, "Number of competition classes to generate (only with --simulation)")
+	rootCmd.Flags().IntVar(&SimulationRunnersPerClass, "simulation-runners", 20, "Number of competitors per class (only with --simulation)")
+	rootCmd.Flags().IntVar(&SimulationRadioControls, "simulation-controls", 3, "Number of radio controls per class (only with --simulation)")
 
 	return rootCmd
 }

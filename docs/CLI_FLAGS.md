@@ -37,6 +37,18 @@ meos-graphics [flags]
 
 - **Description**: Run in simulation mode
 
+### --simulation-classes
+
+- **Type**: int
+- **Default**: 3
+- **Description**: Number of competition classes to generate (only with --simulation)
+
+### --simulation-controls
+
+- **Type**: int
+- **Default**: 3
+- **Description**: Number of radio controls per class (only with --simulation)
+
 ### --simulation-duration
 
 - **Type**: duration
@@ -64,6 +76,18 @@ meos-graphics [flags]
 - **Type**: duration
 - **Default**: 3m0s
 - **Description**: Duration of start list phase (only with --simulation)
+
+### --simulation-runners
+
+- **Type**: int
+- **Default**: 20
+- **Description**: Number of competitors per class (only with --simulation)
+
+### --swagger-host
+
+- **Type**: string
+- **Default**: "localhost:8090"
+- **Description**: Hostname for Swagger documentation API calls
 
 ## Examples
 
