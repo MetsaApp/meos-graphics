@@ -31,7 +31,7 @@ import (
 )
 
 // @title meos-graphics
-// @version 1.0.2 x-release-please-version
+// @version 1.2.0 // x-release-please-version
 // @description REST API for accessing orienteering competition data from MeOS
 // @termsOfService http://swagger.io/terms/
 
