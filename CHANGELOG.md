@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.2.1](https://github.com/MetsaApp/meos-graphics/compare/v1.2.0...v1.2.1) (2025-06-09)
+
+
+### Bug Fixes
+
+* adjust release-please-config.json and function strings ([e58f9cf](https://github.com/MetsaApp/meos-graphics/commit/e58f9cf14bba834c991efe3d66382273e6a25eb0))
+* improve simulation time variance to prevent identical finish times ([#57](https://github.com/MetsaApp/meos-graphics/issues/57)) ([6d898d1](https://github.com/MetsaApp/meos-graphics/commit/6d898d1de0417f49e5a514da06b7b67795daec67))
+* just a test fix to see if release-please work correctly ([cab4cd8](https://github.com/MetsaApp/meos-graphics/commit/cab4cd855e3e08b4c4fae4ff0da119358d3a0e85))
+
 ## [1.2.0](https://github.com/MetsaApp/meos-graphics/compare/v1.1.0...v1.2.0) (2025-06-08)
 
 
