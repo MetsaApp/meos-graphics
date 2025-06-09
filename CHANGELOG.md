@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.2](https://github.com/MetsaApp/meos-graphics/compare/v1.2.1...v1.2.2) (2025-06-09)
+
+
+### Bug Fixes
+
+* trigger build since previous one timed out ([44589df](https://github.com/MetsaApp/meos-graphics/commit/44589dffa6197600c22f3048dd43539fb6e1618d))
+
 ## [1.2.1](https://github.com/MetsaApp/meos-graphics/compare/v1.2.0...v1.2.1) (2025-06-09)
 
 
