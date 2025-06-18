@@ -16,6 +16,12 @@ import (
 	"meos-graphics/internal/state"
 )
 
+// Custom status codes that we assign based on competitor state
+const (
+	StatusWaitingToStart = "1000" // Competitor has start time but hasn't started yet
+	StatusRunning        = "1001" // Competitor has started but hasn't finished
+)
+
 type Adapter struct {
 	client            *http.Client
 	config            *Config
@@ -527,4 +533,47 @@ func decisecondsToTimes(deciseconds int) time.Duration {
 	seconds := deciseconds / 10
 	nanoseconds := (deciseconds % 10) * 100000000
 	return time.Duration(seconds)*time.Second + time.Duration(nanoseconds)*time.Nanosecond
+}
+
+// GetStatusDescription returns a human-readable description for a MeOS status code.
+// This is provided for reference and future UI implementations.
+// Status codes and their meanings:
+//   - 0 = Unknown (also used for Out Of Competition, No Timing)
+//   - 1 = Approved
+//   - 20 = Not Started
+//   - 21 = Cancelled
+//   - 3 = Miss Punch
+//   - 4 = Not Finished
+//   - 5 = Disqualified
+//   - 6 = Max. Time
+//   - 99 = Not Competing
+//   - 1000 = Waiting to Start (custom status)
+//   - 1001 = Running (custom status)
+func GetStatusDescription(statusCode string) string {
+	switch statusCode {
+	case "0":
+		return "Unknown"
+	case "1":
+		return "Approved"
+	case "20":
+		return "Not Started"
+	case "21":
+		return "Cancelled"
+	case "3":
+		return "Miss Punch"
+	case "4":
+		return "Not Finished"
+	case "5":
+		return "Disqualified"
+	case "6":
+		return "Max. Time"
+	case "99":
+		return "Not Competing"
+	case StatusWaitingToStart:
+		return "Waiting to Start"
+	case StatusRunning:
+		return "Running"
+	default:
+		return "Unknown"
+	}
 }

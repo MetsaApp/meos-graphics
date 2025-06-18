@@ -115,6 +115,7 @@ func (s *Service) GetStartList(classID int) ([]StartListEntry, error) {
 // GetResults returns the results for a specific class
 func (s *Service) GetResults(classID int) ([]ResultEntry, error) {
 	competitors := s.state.GetCompetitorsByClass(classID)
+	currentTime := time.Now()
 
 	var results []ResultEntry
 	var finishedCompetitors []models.Competitor
@@ -126,20 +127,46 @@ func (s *Service) GetResults(classID int) ([]ResultEntry, error) {
 	// Categorize competitors
 	for _, comp := range competitors {
 		switch comp.Status {
-		case "1": // OK/Finished
+		case "1": // Approved/Finished
 			if comp.FinishTime != nil {
 				finishedCompetitors = append(finishedCompetitors, comp)
 			}
-		case "3", "4": // DNF or MP (MisPunch)
+		case "3": // Miss Punch
 			dnfCompetitors = append(dnfCompetitors, comp)
-		case "0": // Not yet started
-			waitingCompetitors = append(waitingCompetitors, comp)
-		case "2": // Running
-			runningCompetitors = append(runningCompetitors, comp)
-		case "5": // DNS (Did Not Start - set by organizers)
+		case "4": // Not Finished (DNF)
+			dnfCompetitors = append(dnfCompetitors, comp)
+		case "5": // Disqualified
+			dnfCompetitors = append(dnfCompetitors, comp)
+		case "6": // Max. Time
+			dnfCompetitors = append(dnfCompetitors, comp)
+		case "20": // Not Started
+			if !comp.StartTime.IsZero() && currentTime.Before(comp.StartTime) {
+				waitingCompetitors = append(waitingCompetitors, comp)
+			} else {
+				dnsCompetitors = append(dnsCompetitors, comp)
+			}
+		case "21": // Cancelled
 			dnsCompetitors = append(dnsCompetitors, comp)
+		case "99": // Not Competing
+			dnsCompetitors = append(dnsCompetitors, comp)
+		case "0": // Unknown - need to determine based on start time
+			if !comp.StartTime.IsZero() {
+				if currentTime.Before(comp.StartTime) {
+					// Has start time but hasn't started yet
+					waitingCompetitors = append(waitingCompetitors, comp)
+				} else if comp.FinishTime == nil {
+					// Started but not finished
+					runningCompetitors = append(runningCompetitors, comp)
+				}
+			} else {
+				// No start time - treat as DNS
+				dnsCompetitors = append(dnsCompetitors, comp)
+			}
 		default:
-			// Other status - skip
+			// For any other status codes, check if they're running based on time
+			if !comp.StartTime.IsZero() && currentTime.After(comp.StartTime) && comp.FinishTime == nil {
+				runningCompetitors = append(runningCompetitors, comp)
+			}
 		}
 	}
 
@@ -199,9 +226,18 @@ func (s *Service) GetResults(classID int) ([]ResultEntry, error) {
 
 	// Add DNF competitors
 	for _, comp := range dnfCompetitors {
-		status := "DNF"
-		if comp.Status == "4" {
-			status = "MP" // Mispunch
+		var status string
+		switch comp.Status {
+		case "3":
+			status = "MP" // Miss Punch
+		case "4":
+			status = "DNF" // Did Not Finish
+		case "5":
+			status = "DSQ" // Disqualified
+		case "6":
+			status = "OT" // Over Time (Max. Time)
+		default:
+			status = "DNF"
 		}
 		results = append(results, ResultEntry{
 			Name:   comp.Name,
@@ -227,16 +263,25 @@ func (s *Service) GetResults(classID int) ([]ResultEntry, error) {
 		results = append(results, ResultEntry{
 			Name:   comp.Name,
 			Club:   comp.Club.Name,
-			Status: "Waiting",
+			Status: "Waiting to Start",
 		})
 	}
 
 	// Add DNS competitors (Did Not Start - set by organizers)
 	for _, comp := range dnsCompetitors {
+		var status string
+		switch comp.Status {
+		case "21":
+			status = "Cancelled"
+		case "99":
+			status = "Not Competing"
+		default:
+			status = "DNS"
+		}
 		results = append(results, ResultEntry{
 			Name:   comp.Name,
 			Club:   comp.Club.Name,
-			Status: "DNS",
+			Status: status,
 		})
 	}
 
@@ -258,7 +303,7 @@ func (s *Service) GetSplits(classID int) (*SplitsResponse, error) {
 	}
 
 	if className == "" {
-		return nil, fmt.Errorf("Class not found")
+		return nil, fmt.Errorf("class not found")
 	}
 
 	competitors := s.state.GetCompetitorsByClass(classID)

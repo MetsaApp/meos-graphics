@@ -214,3 +214,35 @@ func TestAdapter_Connect(t *testing.T) {
 		t.Errorf("Event name = %q, want %q", event.Name, "Test Competition")
 	}
 }
+
+func TestGetStatusDescription(t *testing.T) {
+	tests := []struct {
+		statusCode string
+		expected   string
+	}{
+		{"0", "Unknown"},
+		{"1", "Approved"},
+		{"20", "Not Started"},
+		{"21", "Cancelled"},
+		{"3", "Miss Punch"},
+		{"4", "Not Finished"},
+		{"5", "Disqualified"},
+		{"6", "Max. Time"},
+		{"99", "Not Competing"},
+		{"1000", "Waiting to Start"},  // Custom status
+		{"1001", "Running"},           // Custom status
+		{"", "Unknown"},               // Empty string
+		{"abc", "Unknown"},            // Invalid number
+		{"100", "Unknown"},            // Unknown code
+		{"-1", "Unknown"},             // Negative number
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.statusCode, func(t *testing.T) {
+			result := GetStatusDescription(tt.statusCode)
+			if result != tt.expected {
+				t.Errorf("GetStatusDescription(%q) = %q, want %q", tt.statusCode, result, tt.expected)
+			}
+		})
+	}
+}

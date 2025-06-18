@@ -225,7 +225,7 @@ func TestHandler_GetResults(t *testing.T) {
 	comp3.Status = "3" // DNF
 
 	comp4 := testhelpers.CreateTestCompetitor(4, "Sarah Wilson", club2, class)
-	comp4.Status = "5" // DNS
+	comp4.Status = "21" // Cancelled (will show as DNS category)
 
 	comp5 := testhelpers.CreateTestCompetitor(5, "Tom Brown", club1, class)
 	comp5.Status = "4" // MP (Mispunch)
@@ -290,17 +290,17 @@ func TestHandler_GetResults(t *testing.T) {
 	dnsFound := false
 	for _, result := range results {
 		switch result.Status {
-		case "DNF":
+		case "DNF", "DSQ", "OT":
 			dnfFound = true
 			if result.Position != 0 {
-				t.Error("DNF should not have position")
+				t.Error("DNF/DSQ/OT should not have position")
 			}
 			if result.RunningTime != "" {
-				t.Error("DNF should not have running time")
+				t.Error("DNF/DSQ/OT should not have running time")
 			}
 		case "MP":
 			mpFound = true
-		case "DNS":
+		case "DNS", "Cancelled", "Not Competing":
 			dnsFound = true
 		}
 	}
@@ -462,8 +462,8 @@ func TestHandler_GetSplits_ClassNotFound(t *testing.T) {
 		t.Fatalf("Failed to unmarshal response: %v", err)
 	}
 
-	if response["error"] != "Class not found" {
-		t.Errorf("Error message = %q, want %q", response["error"], "Class not found")
+	if response["error"] != "class not found" {
+		t.Errorf("Error message = %q, want %q", response["error"], "class not found")
 	}
 }
 
