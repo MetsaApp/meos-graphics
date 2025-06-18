@@ -84,7 +84,6 @@ func TestGetStatusDescription(t *testing.T) {
 	}
 }
 
-
 func TestParseLanguage(t *testing.T) {
 	tests := []struct {
 		input    string
@@ -161,3 +160,4 @@ func TestConcurrentAccess(t *testing.T) {
 		<-done
 	}
 }
+

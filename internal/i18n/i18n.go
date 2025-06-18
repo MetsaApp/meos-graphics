@@ -50,7 +50,6 @@ var statusDescriptions = map[Language]map[string]string{
 	},
 }
 
-
 var (
 	instance *Translator
 	once     sync.Once
@@ -103,7 +102,6 @@ func (t *Translator) GetStatusDescription(statusCode string) string {
 	return "Unknown"
 }
 
-
 // ParseLanguage converts a string to Language type
 func ParseLanguage(lang string) Language {
 	switch lang {
@@ -120,3 +118,4 @@ func ParseLanguage(lang string) Language {
 func (l Language) String() string {
 	return string(l)
 }
+
