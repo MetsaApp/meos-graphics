@@ -118,4 +118,3 @@ func ParseLanguage(lang string) Language {
 func (l Language) String() string {
 	return string(l)
 }
-

@@ -229,12 +229,12 @@ func TestGetStatusDescription(t *testing.T) {
 		{"5", "Disqualified"},
 		{"6", "Max. Time"},
 		{"99", "Not Competing"},
-		{"1000", "Waiting to Start"},  // Custom status
-		{"1001", "Running"},           // Custom status
-		{"", "Unknown"},               // Empty string
-		{"abc", "Unknown"},            // Invalid number
-		{"100", "Unknown"},            // Unknown code
-		{"-1", "Unknown"},             // Negative number
+		{"1000", "Waiting to Start"}, // Custom status
+		{"1001", "Running"},          // Custom status
+		{"", "Unknown"},              // Empty string
+		{"abc", "Unknown"},           // Invalid number
+		{"100", "Unknown"},           // Unknown code
+		{"-1", "Unknown"},            // Negative number
 	}
 
 	for _, tt := range tests {
