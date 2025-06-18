@@ -17,6 +17,7 @@ import (
 
 	"meos-graphics/internal/cmd"
 	"meos-graphics/internal/handlers"
+	"meos-graphics/internal/i18n"
 	"meos-graphics/internal/logger"
 	"meos-graphics/internal/meos"
 	"meos-graphics/internal/middleware"
@@ -92,7 +93,10 @@ func run(_ *cobra.Command, _ []string) error {
 		return fmt.Errorf("failed to initialize logger: %v", err)
 	}
 
-	logger.InfoLogger.Printf("Starting MeOS Graphics API Server v%s", version.Version)
+	// Initialize i18n with the selected language
+	lang := i18n.ParseLanguage(cmd.Language)
+	i18n.GetInstance().SetLanguage(lang)
+	logger.InfoLogger.Printf("Starting MeOS Graphics API Server v%s (language: %s)", version.Version, lang)
 	if cmd.SimulationMode {
 		logger.InfoLogger.Println("Running in SIMULATION MODE")
 

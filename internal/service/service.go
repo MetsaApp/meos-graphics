@@ -5,6 +5,7 @@ import (
 	"sort"
 	"time"
 
+	"meos-graphics/internal/i18n"
 	"meos-graphics/internal/models"
 	"meos-graphics/internal/state"
 )
@@ -214,7 +215,7 @@ func (s *Service) GetResults(classID int) ([]ResultEntry, error) {
 		result := ResultEntry{
 			Name:        comp.Name,
 			Club:        comp.Club.Name,
-			Status:      "OK",
+			Status:      i18n.GetInstance().GetStatusDescription("1"),
 			RunningTime: timeStr,
 			Position:    position,
 		}
@@ -229,15 +230,15 @@ func (s *Service) GetResults(classID int) ([]ResultEntry, error) {
 		var status string
 		switch comp.Status {
 		case "3":
-			status = "MP" // Miss Punch
+			status = i18n.GetInstance().GetStatusDescription(comp.Status) // Miss Punch
 		case "4":
-			status = "DNF" // Did Not Finish
+			status = i18n.GetInstance().GetStatusDescription(comp.Status) // Did Not Finish
 		case "5":
-			status = "DSQ" // Disqualified
+			status = i18n.GetInstance().GetStatusDescription(comp.Status) // Disqualified
 		case "6":
-			status = "OT" // Over Time (Max. Time)
+			status = i18n.GetInstance().GetStatusDescription(comp.Status) // Over Time (Max. Time)
 		default:
-			status = "DNF"
+			status = i18n.GetInstance().GetStatusDescription("4")
 		}
 		results = append(results, ResultEntry{
 			Name:   comp.Name,
@@ -254,7 +255,7 @@ func (s *Service) GetResults(classID int) ([]ResultEntry, error) {
 		results = append(results, ResultEntry{
 			Name:   comp.Name,
 			Club:   comp.Club.Name,
-			Status: "Running",
+			Status: i18n.GetInstance().GetStatusDescription("1001"),
 		})
 	}
 
@@ -263,7 +264,7 @@ func (s *Service) GetResults(classID int) ([]ResultEntry, error) {
 		results = append(results, ResultEntry{
 			Name:   comp.Name,
 			Club:   comp.Club.Name,
-			Status: "Waiting to Start",
+			Status: i18n.GetInstance().GetStatusDescription("1000"),
 		})
 	}
 
@@ -272,11 +273,11 @@ func (s *Service) GetResults(classID int) ([]ResultEntry, error) {
 		var status string
 		switch comp.Status {
 		case "21":
-			status = "Cancelled"
+			status = i18n.GetInstance().GetStatusDescription(comp.Status)
 		case "99":
-			status = "Not Competing"
+			status = i18n.GetInstance().GetStatusDescription(comp.Status)
 		default:
-			status = "DNS"
+			status = i18n.GetInstance().GetStatusDescription("20")
 		}
 		results = append(results, ResultEntry{
 			Name:   comp.Name,
@@ -412,7 +413,7 @@ func (s *Service) GetSplits(classID int) (*SplitsResponse, error) {
 		// Add competitors without this split (but not for finish)
 		if control.ID != -1 {
 			for _, comp := range competitors {
-				if comp.Status == "3" { // DNF
+				if comp.Status == "3" { // Miss Punch
 					found := false
 					for _, entry := range splitEntries {
 						if entry.competitor.ID == comp.ID {

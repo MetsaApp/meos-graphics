@@ -13,6 +13,7 @@ var (
 	MeosHost       string
 	MeosPort       string
 	SwaggerHost    string
+	Language       string
 
 	// Simulation timing configuration
 	SimulationDuration     time.Duration
@@ -46,6 +47,7 @@ The server can run in two modes:
 	rootCmd.Flags().StringVar(&MeosHost, "meos-host", "localhost", "MeOS server hostname or IP address")
 	rootCmd.Flags().StringVar(&MeosPort, "meos-port", "2009", "MeOS server port (use 'none' to omit port from URL)")
 	rootCmd.Flags().StringVar(&SwaggerHost, "swagger-host", "localhost:8090", "Hostname for Swagger documentation API calls")
+	rootCmd.Flags().StringVarP(&Language, "language", "l", "en", "Language for status display (en=English, da=Danish)")
 
 	// Simulation timing flags
 	rootCmd.Flags().DurationVar(&SimulationDuration, "simulation-duration", 15*time.Minute, "Total simulation cycle duration (only with --simulation)")

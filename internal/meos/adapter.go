@@ -11,6 +11,7 @@ import (
 	"sync"
 	"time"
 
+	"meos-graphics/internal/i18n"
 	"meos-graphics/internal/logger"
 	"meos-graphics/internal/models"
 	"meos-graphics/internal/state"
@@ -550,30 +551,6 @@ func decisecondsToTimes(deciseconds int) time.Duration {
 //   - 1000 = Waiting to Start (custom status)
 //   - 1001 = Running (custom status)
 func GetStatusDescription(statusCode string) string {
-	switch statusCode {
-	case "0":
-		return "Unknown"
-	case "1":
-		return "Approved"
-	case "20":
-		return "Not Started"
-	case "21":
-		return "Cancelled"
-	case "3":
-		return "Miss Punch"
-	case "4":
-		return "Not Finished"
-	case "5":
-		return "Disqualified"
-	case "6":
-		return "Max. Time"
-	case "99":
-		return "Not Competing"
-	case StatusWaitingToStart:
-		return "Waiting to Start"
-	case StatusRunning:
-		return "Running"
-	default:
-		return "Unknown"
-	}
+	translator := i18n.GetInstance()
+	return translator.GetStatusDescription(statusCode)
 }

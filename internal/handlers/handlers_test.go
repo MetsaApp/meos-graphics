@@ -290,29 +290,29 @@ func TestHandler_GetResults(t *testing.T) {
 	dnsFound := false
 	for _, result := range results {
 		switch result.Status {
-		case "DNF", "DSQ", "OT":
+		case "Not Finished", "Disqualified", "Max. Time":
 			dnfFound = true
 			if result.Position != 0 {
-				t.Error("DNF/DSQ/OT should not have position")
+				t.Error("Not Finished/Disqualified/Max. Time should not have position")
 			}
 			if result.RunningTime != "" {
-				t.Error("DNF/DSQ/OT should not have running time")
+				t.Error("Not Finished/Disqualified/Max. Time should not have running time")
 			}
-		case "MP":
+		case "Miss Punch":
 			mpFound = true
-		case "DNS", "Cancelled", "Not Competing":
+		case "Not Started", "Cancelled", "Not Competing":
 			dnsFound = true
 		}
 	}
 
 	if !dnfFound {
-		t.Error("DNF competitor not found in results")
+		t.Error("Not Finished competitor not found in results")
 	}
 	if !mpFound {
-		t.Error("MP competitor not found in results")
+		t.Error("Miss Punch competitor not found in results")
 	}
 	if !dnsFound {
-		t.Error("DNS competitor not found in results")
+		t.Error("Not Started competitor not found in results")
 	}
 }
 
