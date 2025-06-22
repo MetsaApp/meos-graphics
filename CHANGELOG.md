@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/MetsaApp/meos-graphics/compare/v1.2.2...v1.3.0) (2025-06-22)
+
+
+### Features
+
+* enhance competitor status mapping with dynamic statuses ([#62](https://github.com/MetsaApp/meos-graphics/issues/62)) ([6bac30c](https://github.com/MetsaApp/meos-graphics/commit/6bac30c1e46d6c17b28572d6ee55004c09b6c574))
+
 ## [1.2.2](https://github.com/MetsaApp/meos-graphics/compare/v1.2.1...v1.2.2) (2025-06-09)
 
 
