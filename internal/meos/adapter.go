@@ -11,9 +11,16 @@ import (
 	"sync"
 	"time"
 
+	"meos-graphics/internal/i18n"
 	"meos-graphics/internal/logger"
 	"meos-graphics/internal/models"
 	"meos-graphics/internal/state"
+)
+
+// Custom status codes that we assign based on competitor state
+const (
+	StatusWaitingToStart = "1000" // Competitor has start time but hasn't started yet
+	StatusRunning        = "1001" // Competitor has started but hasn't finished
 )
 
 type Adapter struct {
@@ -527,4 +534,23 @@ func decisecondsToTimes(deciseconds int) time.Duration {
 	seconds := deciseconds / 10
 	nanoseconds := (deciseconds % 10) * 100000000
 	return time.Duration(seconds)*time.Second + time.Duration(nanoseconds)*time.Nanosecond
+}
+
+// GetStatusDescription returns a human-readable description for a MeOS status code.
+// This is provided for reference and future UI implementations.
+// Status codes and their meanings:
+//   - 0 = Unknown (also used for Out Of Competition, No Timing)
+//   - 1 = Approved
+//   - 20 = Not Started
+//   - 21 = Cancelled
+//   - 3 = Miss Punch
+//   - 4 = Not Finished
+//   - 5 = Disqualified
+//   - 6 = Max. Time
+//   - 99 = Not Competing
+//   - 1000 = Waiting to Start (custom status)
+//   - 1001 = Running (custom status)
+func GetStatusDescription(statusCode string) string {
+	translator := i18n.GetInstance()
+	return translator.GetStatusDescription(statusCode)
 }

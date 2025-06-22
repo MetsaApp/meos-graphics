@@ -15,6 +15,12 @@ meos-graphics [flags]
 
 ## Available Flags
 
+### --language
+
+- **Type**: string
+- **Default**: "en"
+- **Description**: Language for status display (en=English, da=Danish)
+
 ### --meos-host
 
 - **Type**: string
