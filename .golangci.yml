@@ -20,7 +20,7 @@ linters:
 
 linters-settings:
   govet:
-    check-shadowing: true
+    shadow: true
   errcheck:
     check-type-assertions: true
     check-blank: false
