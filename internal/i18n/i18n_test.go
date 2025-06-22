@@ -125,7 +125,7 @@ func TestLanguageString(t *testing.T) {
 	}
 }
 
-func TestConcurrentAccess(t *testing.T) {
+func TestConcurrentAccess(_ *testing.T) {
 	translator := GetInstance()
 
 	// Test concurrent reads and writes
