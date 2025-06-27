@@ -333,10 +333,6 @@ func (s *Service) GetSplits(classID int) (*SplitsResponse, error) {
 
 		// Collect split times for this control
 		for _, comp := range competitors {
-			if comp.Status == "0" {
-				continue // Skip DNS
-			}
-
 			var splitTime *time.Time
 			var elapsed time.Duration
 
