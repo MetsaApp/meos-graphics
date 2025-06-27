@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.1](https://github.com/MetsaApp/meos-graphics/compare/v1.3.0...v1.3.1) (2025-06-27)
+
+
+### Bug Fixes
+
+* remove status filtering in the service ([bd369c3](https://github.com/MetsaApp/meos-graphics/commit/bd369c30f06fe760aa4987a156178dfca452f20e))
+
 ## [1.3.0](https://github.com/MetsaApp/meos-graphics/compare/v1.2.2...v1.3.0) (2025-06-22)
 
 
