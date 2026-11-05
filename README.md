@@ -330,7 +330,7 @@ The generated files are:
 - `docs/swagger.json` - OpenAPI specification in JSON
 - `docs/swagger.yaml` - OpenAPI specification in YAML
 
-**Important**: The CI pipeline and pre-commit hooks validate that all documentation is up-to-date. If you:
+**Important**: `scripts/check.sh` (run by the pre-push hook) and the pre-commit hooks validate that all documentation is up-to-date. If you:
 - Add or modify command-line flags → regenerate CLI docs
 - Add or modify API endpoints → regenerate Swagger docs
 - Change API request/response types → regenerate Swagger docs

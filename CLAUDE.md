@@ -156,8 +156,15 @@ This project uses conventional commits for automatic semantic versioning:
 ### Making Changes
 1. Create feature branch from `main`
 2. Make changes with conventional commits
-3. Push branch and create PR
-4. After merge, release-please will handle versioning
+3. Run `scripts/check.sh` and make it pass (see Local validation)
+4. Push branch and create PR
+5. After merge, release-please will handle versioning
+
+### Local validation
+GitHub Actions CI is off to save paid minutes, so nothing checks a pull request on GitHub. Run `scripts/check.sh` and make it pass before pushing.
+
+- `scripts/check.sh` is `make check`, the steps `.github/workflows/test.yml` ran: templ generate, go build, go test, golangci-lint, and the CLI and Swagger docs are current. It runs the Go toolchain go.mod names. There is no slow suite, so there is no `--full`.
+- The pre-push hook (`.githooks/pre-push`) runs `scripts/check.sh`. Claude Code sessions turn it on at start; humans turn it on once with `git config core.hooksPath .githooks`. `git push --no-verify` skips it.
 
 ### Release Automation
 Releases are fully automated via GitHub Actions:
@@ -211,7 +218,7 @@ The Swagger/OpenAPI documentation is generated from annotations in `cmd/meos-gra
 1. **All API metadata must be defined in main.go annotations**
 2. **Never manually edit generated files** (docs.go, swagger.json, swagger.yaml)
 3. **Validation script** at `scripts/validate-swagger.sh` ensures docs match source annotations
-4. **Pre-commit hooks** automatically check for drift between source and generated docs
+4. **Pre-commit hooks** and `scripts/check.sh` check for drift between source and generated docs
 
 ### Updating API Documentation
 ```bash
