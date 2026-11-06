@@ -34,11 +34,11 @@ func main() {
 	fmt.Printf("Documentation generated: %s\n", outputPath)
 }
 
-func generateDocumentation(cmd *cobra.Command) string {
+func generateDocumentation(root *cobra.Command) string {
 	var sb strings.Builder
 
 	sb.WriteString("# MeOS Graphics CLI Flags\n\n")
-	sb.WriteString(cmd.Long)
+	sb.WriteString(root.Long)
 	sb.WriteString("\n\n")
 
 	sb.WriteString("## Usage\n\n")
@@ -50,8 +50,8 @@ func generateDocumentation(cmd *cobra.Command) string {
 
 	// Get the help output
 	buf := new(bytes.Buffer)
-	cmd.SetOut(buf)
-	_ = cmd.Usage() // Ignore error as Usage() always returns nil
+	root.SetOut(buf)
+	_ = root.Usage() // Ignore error as Usage() always returns nil
 	helpOutput := buf.String()
 
 	// Parse flags from help output
